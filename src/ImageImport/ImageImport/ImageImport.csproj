@@ -1,0 +1,72 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Icons\app.ico</ApplicationIcon>
+    <IsPublishable>False</IsPublishable>
+    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+    <Title>Image Import</Title>
+    <Authors>Calteo</Authors>
+    <Description>Image importer with configurable rules.</Description>
+    <Copyright>MIT</Copyright>
+    <PackageProjectUrl>https://github.com/Calteo/ImageImport</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Calteo/ImageImport</RepositoryUrl>
+    <PackageTags>import;images</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <UseWPF>True</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Icons\download.ico" />
+    <None Remove="Icons\file.ico" />
+    <None Remove="Icons\file_minus.ico" />
+    <None Remove="Icons\file_plus.ico" />
+    <None Remove="Icons\folder.ico" />
+    <None Remove="Icons\folder_minus.ico" />
+    <None Remove="Icons\folder_plus.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Icons\app.ico" />
+    <EmbeddedResource Include="Icons\download.ico" />
+    <EmbeddedResource Include="Icons\file.ico" />
+    <EmbeddedResource Include="Icons\file_minus.ico" />
+    <EmbeddedResource Include="Icons\file_plus.ico" />
+    <EmbeddedResource Include="Icons\folder.ico" />
+    <EmbeddedResource Include="Icons\folder_minus.ico" />
+    <EmbeddedResource Include="Icons\folder_plus.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MetadataExtractor" Version="2.7.2" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1418.22" />
+    <PackageReference Include="Toolbox.CommandLine" Version="1.0.31" />
+    <PackageReference Include="Toolbox.Core" Version="0.2.6" />
+    <PackageReference Include="Toolbox.Xml.Settings" Version="1.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Licences\" />
+    <Folder Include="Resources\" />
+  </ItemGroup>
+
+</Project>
