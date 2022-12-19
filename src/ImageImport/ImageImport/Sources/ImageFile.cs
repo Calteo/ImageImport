@@ -1,22 +1,12 @@
-﻿using System.IO;
-
-namespace ImageImport.Sources
+﻿namespace ImageImport.Sources
 {
-    internal class ImageFile
+    internal abstract class ImageFile<T> : ImageFileBase where T : ImageSource
     {
-        public ImageFile(string fullName)
+        public ImageFile(T source, string fullName, DateTime created) : base(source, fullName, created)
         {
-            FullName = fullName;
-            Name = Path.GetFileName(fullName);
-            Extension = Path.GetExtension(fullName);
-
-            Parameters.Add("name", Name);
+            Source = source;
         }
 
-        public string FullName { get; }
-        public string Name { get; }
-        public string Extension { get; }
-
-        public Dictionary<string, object> Parameters { get; } = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
+        public new T Source { get; }
     }
 }

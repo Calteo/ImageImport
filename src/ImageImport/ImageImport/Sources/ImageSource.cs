@@ -1,13 +1,8 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Windows.Media.Imaging;
-using MetadataExtractor;
-using MetadataExtractor.Formats.Exif;
-using Sharpen;
-using Toolbox.Collection.Generics;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
-using Directory = MetadataExtractor.Directory;
+using System.Text;
 
 namespace ImageImport.Sources
 {
@@ -17,7 +12,23 @@ namespace ImageImport.Sources
         public virtual string Description => $"{GetType().Name}.{GetHashCode()}";
 
         [Description("Include subfolders"), DefaultValue(true)]
-        public bool Recursive { get; set; } = true;
+        public bool Recursive
+        {
+            get => recursive;
+            set
+            {
+                if (recursive == value) return;
+                recursive = value;
+
+                ResetScan();
+            }
+        }
+
+        protected void ResetScan()
+        {
+            State = SourceState.Unknown;
+            CancelScan = true;
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -28,15 +39,173 @@ namespace ImageImport.Sources
 
         public abstract Icon GetIcon();
 
+        #region LastScan
+        private DateTime dateTime = DateTime.MinValue;
+        [Browsable(false)]
+        public DateTime LastScan
+        {
+            get => dateTime;
+            set
+            {
+                if (dateTime == value) return;
+                dateTime = value;
+                OnPropertyChanged();
+            }
+        }
+        #endregion
+
+        [Browsable(false)]
+        public BindingList<ImageFileBase> Files { get; } = new BindingList<ImageFileBase>();
+
+        [Description("State of source")]
+        #region State
+        private const SourceState StateDefault = SourceState.Unknown;
+        private SourceState sourceState = StateDefault;
+        [DefaultValue(StateDefault)]
+        public SourceState State
+        {
+            get => sourceState;
+            private set
+            {
+                if (sourceState == value) return;
+                sourceState = value;
+                OnPropertyChanged();
+            }
+        }
+        #endregion
+
+        public void DispatchScan()
+        {
+            if (State == SourceState.Unknown)
+            {
+                CancelScan = true;
+                ScanThread?.Join();
+
+                CancelScan = false;
+                State = SourceState.Scanning;
+                Files.Clear();
+
+                ScanThread = new Thread(Scan)
+                {
+                    Name = $"Scan<{Description}>",
+                    IsBackground = true,
+                    Priority = ThreadPriority.BelowNormal
+                };
+                ScanThread.Start();
+            }
+        }
+
+        private bool CancelScan { get; set; }
+        private Thread? ScanThread { get; set; }
+
+        private void Scan()
+        {
+            var counters = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
+
+            try
+            {
+                InitScan();
+
+                var tokenName = ImportToken.FileName;
+
+                Files.RaiseListChangedEvents = false;
+
+                foreach (var file in EnumerateFiles())
+                {
+                    if (CancelScan) break;
+                    
+                    if (file.Name != tokenName)
+                    {
+                        Tracer.TraceVerbose($"file '{file.FullName}'");
+
+                        if (counters.ContainsKey(file.Extension))
+                            counters[file.Extension]++;
+                        else
+                            counters[file.Extension] = 1;
+
+                        lock (Files)
+                        {
+                            Files.Add(file);
+                        }
+                        if (Files.Count % 500 == 0) // trigger a list event every 500 files
+                        {
+                            Files.RaiseListChangedEvents = true;
+                            Files[0] = Files[0];
+                            Files.RaiseListChangedEvents = false;
+                        }
+                    }
+                }
+
+                State = CancelScan ? SourceState.Unknown : SourceState.Scanned;                
+            }
+            catch (Exception exception)
+            {
+                Tracer.TraceException(exception, 859);
+                State = SourceState.Failed;
+            }
+            finally
+            {
+                if (Tracer.Switch.Level.HasFlag(SourceLevels.Information))
+                {
+                    var builder = new StringBuilder();
+                    builder.Append("Files by type: ");
+                    var types = counters.OrderBy(v => v.Key).Select(kvp => $"[{kvp.Key[1..]}]={kvp.Value:#,##0}");
+                    builder.Append(string.Join(", ", types));
+
+                    Tracer.TraceInformation(builder.ToString());
+                }
+
+                CompleteScan();
+
+                Files.RaiseListChangedEvents = true;
+                ScanThread = null;
+            }
+        }
+
         public virtual void InitScan()
         {
+            Tracer.StartOperation("scan");
+            Tracer.TraceStart(Description);
+
+            var tokenName = ImportToken.FileName;
+
+            using var stream = OpenToken(tokenName);
+            if (stream == null) Tracer.TraceVerbose($"no token found {tokenName}");
+            else
+            {
+                try
+                {
+                    Tracer.TraceVerbose($"found token {tokenName}");
+                    Token = ImportToken.Parse(stream);
+                }
+                catch (Exception exception)
+                {
+                    Tracer.TraceException(exception, 1102);
+                }
+            }
+
+            LastScan = DateTime.Now;
         }
 
         public virtual void CompleteScan()
         {
+            Tracer.TraceInformation($"found {Files.Count:#,##0} files");
+            Tracer.TraceVerbose($"state={State} / canceled={CancelScan}");
+            
+            Tracer.TraceStop(Description);
+            Tracer.StopOperation();
         }
 
-        public abstract IEnumerable<ImageFile> EnumerateFiles();
+        [Browsable(false)]
+        public ImportToken? Token { get; set; }
+
+        [Description("Time of last import.")]
+        public DateTime? LastImport => Token?.LastImport;
+
+        protected abstract Stream? OpenToken(string fileName);
+        protected abstract void SaveToken(Stream stream, string fileName);
+
+        public abstract IEnumerable<ImageFileBase> EnumerateFiles();
 
         #region Imported
         private const int ImportedDefault = 0;
@@ -71,6 +240,8 @@ namespace ImageImport.Sources
         #region Failed
         private const int FailedDefault = 0;
         private int failed = FailedDefault;
+        private bool recursive = true;
+
         [Browsable(false), DefaultValue(FailedDefault)]
         public int Failed
         {
@@ -91,140 +262,77 @@ namespace ImageImport.Sources
 
         public virtual void CompleteImport()
         {
-        }
-
-        public abstract Stream GetStream(ImageFile file);
-
-        private const string MetadataSeparator = "/";
-
-        static Dictionary<string, Func<Tag, object, object>> Converters { get; } = new Dictionary<string, Func<Tag, object, object>>()
-        {
-            { $"Exif IFD0{MetadataSeparator}DateTime", ConvertDateTime },
-            { $"Exif SubIFD{MetadataSeparator}DateTime Original", ConvertDateTime },
-            { $"Exif SubIFD.Date{MetadataSeparator}Time Digitized", ConvertDateTime },
-            { $"GPS{MetadataSeparator}GPS Date Stamp", ConvertDateTime },
-            { $"GPS{MetadataSeparator}GPS Time-Stamp", ConvertGpsTimeStamp }
-        };
-
-        private static string[] DateTimeFormats { get; } =
-        {
-            "yyyy:MM:dd HH:mm:ss",
-            "yyyy:MM:dd",
-        };
-        private static object ConvertDateTime(Tag tag, object value)
-        {
-            if (value is StringValue text)
-            {
-                if (DateTime.TryParseExact(text.ToString(), DateTimeFormats, null, System.Globalization.DateTimeStyles.None, out var parsed))
-                    return parsed;
-            }
-            return value;
-        }
-
-        private static object ConvertGpsTimeStamp(Tag tag, object value)
-        {
-            return tag.Description ?? value;
-        }
-
-        public void Import(ImageFile file, Profile profile, Action<string> protocol, Action<string> protocolVerbose)
-        {
-            var fileType = profile.GetFileType(file);
-
-            if (fileType.Parameters.Any(p => !file.Parameters.ContainsKey(p)))
-            {
-                GetMetadata(file, protocol, protocolVerbose);
-            }
+            var tokenName = ImportToken.FileName;
 
             try
             {
+                Tracer.TraceInformation($"create token {tokenName}");
+
+                var token = new ImportToken { LastImport = LastScan };
+                using var stream = token.Serialize();
+                SaveToken(stream, tokenName);
+
+                Token = token;
+            }
+            catch (Exception excption)
+            {
+                Tracer.TraceException(excption, 8596);
+            }
+        }        
+
+        public void Import(ImageFileBase file, Profile profile)
+        {
+            Tracer.StartOperation(file.Name);
+            Tracer.TraceInformation($"from {file.FullName}");
+
+            try
+            {
+                var fileType = profile.GetFileType(file);
+
+                if (fileType.Parameters.Any(p => !file.MetaDictionary.Contains(p)))
+                {
+                    file.GetMetadata();
+                }
+
                 var target = fileType.GetTarget(file);
 
                 if (File.Exists(target) && !profile.Overwrite)
                 {
                     Skipped++;
-                    protocol($"  skip {target}");
+                    Tracer.TraceInformation($"  skip {target}");
                 }
                 else
                 {
-                    protocol($"   --> {target}");
-
                     var folder = Path.GetDirectoryName(target);
-                    if (folder != null && !System.IO.Directory.Exists(folder))
+                    if (folder != null && !Directory.Exists(folder))
                     {
-                        System.IO.Directory.CreateDirectory(folder);
+                        Directory.CreateDirectory(folder);
                     }
 
-                    Copy(file, target);
+                    file.Copy(target);
                     Imported++;
+                    Tracer.TraceInformation($"   --> {target}");
                 }
             }
             catch (Exception exception)
             {
                 Failed++;
-                protocol($"copy failed: {exception.Message}");
+                Tracer.TraceException(exception, 125);
+            }
+            finally
+            {
+                Tracer.StopOperation();
             }
         }
 
-        abstract protected void Copy(ImageFile file, string target);
+        abstract protected void Copy(ImageFileBase file, string target);
+    }
 
-        private void GetMetadata(ImageFile file, Action<string> protocol, Action<string> protocolVerbose)
-        {
-            try
-            {
-                using var stream = GetStream(file);
-                var metadatas = ImageMetadataReader.ReadMetadata(stream).ToHashSet();
-                var stack = new Stack<Directory>();
-
-                while (metadatas.Count > 0)
-                {
-                    metadatas.Where(m => m.Parent == null || !metadatas.Contains(m.Parent))
-                        .ToArray()
-                        .ForEach(m => 
-                        {
-                            stack.Push(m);
-                            metadatas.Remove(m);
-                        });
-                }                
-
-                foreach (var metadata in stack)
-                {
-                    foreach (var tag in metadata.Tags.Where(t => t.HasName))
-                    {
-                        var value = metadata.GetObject(tag.Type);
-
-                        var name = tag.Name.Replace(MetadataSeparator, "");
-                        var basename = metadata.Name + MetadataSeparator + name;
-                        var fullname = basename;
-
-                        for (var parent = metadata.Parent; parent != null; parent = parent.Parent)
-                        {
-                            fullname = parent.Name + MetadataSeparator + fullname;
-                        }
-
-                        if (value != null)
-                        {
-                            if (Converters.TryGetValue(basename, out var converter))
-                            {
-                                value = converter(tag, value);
-                            }
-
-                            var description = value.ToString() != tag.Description ? $" ({tag.Description})" : "";
-                            protocolVerbose($"  {fullname} = {value.GetType().Name} [{value}]{description}");
-
-                            file.Parameters[fullname] = value;
-                            file.Parameters[name] = value;
-                        }
-                        else
-                        {
-                            protocolVerbose($"  {fullname} = <null> ignored");
-                        }
-                    }
-                }
-            }
-            catch (Exception exception)
-            {
-                protocol($"failed to read metadata: {exception.Message}");
-            }
-        }
+    public enum SourceState
+    {
+        Unknown,
+        Scanning,
+        Scanned,
+        Failed
     }
 }

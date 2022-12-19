@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.DirectoryServices.ActiveDirectory;
 using System.Runtime.CompilerServices;
 using ImageImport.Sources;
 
@@ -39,6 +40,21 @@ namespace ImageImport
             }
         }
         #endregion
+        #region OnlyNewFiles
+        private const bool OnlyNewFilesDefault = false;
+        private bool onlyNewFiles = OnlyNewFilesDefault;
+        [DefaultValue(OnlyNewFilesDefault), Description("Import only new files")]
+        public bool OnlyNewFiles
+        {
+            get => onlyNewFiles;
+            set
+            {
+                if (onlyNewFiles == value) return;
+                onlyNewFiles = value;
+                OnPropertyChanged();
+            }
+        }
+        #endregion
 
         public BindingList<ProfileFileType> FileTypes { get; set; } = new BindingList<ProfileFileType>();
 
@@ -48,8 +64,8 @@ namespace ImageImport
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
-        internal ProfileFileType GetFileType(ImageFile file) => FileTypes.First(ft => ft.Match(file.Extension));
-        internal bool CanImport(ImageFile file) => FileTypes.Any(ft => ft.Match(file.Extension));
+        internal ProfileFileType GetFileType(ImageFileBase file) => FileTypes.First(ft => ft.Match(file.Extension));
+        internal bool CanImport(ImageFileBase file) => FileTypes.Any(ft => ft.Match(file.Extension));
 
     }
 }

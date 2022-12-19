@@ -41,10 +41,23 @@
             this.textBoxProtocol = new System.Windows.Forms.TextBox();
             this.contextMenuProtocol = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.clearProtocolButton = new System.Windows.Forms.ToolStripMenuItem();
+            this.outputProtocolButton = new System.Windows.Forms.ToolStripMenuItem();
+            this.dateTimeProtocolButton = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextProtocolButton = new System.Windows.Forms.ToolStripMenuItem();
+            this.threadProtocolButton = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.noneProtocolButton = new System.Windows.Forms.ToolStripMenuItem();
+            this.informationProtocolButton = new System.Windows.Forms.ToolStripMenuItem();
+            this.warningProtocolButton = new System.Windows.Forms.ToolStripMenuItem();
+            this.errorProtocolButton = new System.Windows.Forms.ToolStripMenuItem();
+            this.criticalProtocolButton = new System.Windows.Forms.ToolStripMenuItem();
             this.verboseProtocolButton = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.activityProtocolButton = new System.Windows.Forms.ToolStripMenuItem();
             this.labelFiles = new System.Windows.Forms.Label();
             this.labelFilesLabel = new System.Windows.Forms.Label();
             this.checkBoxOverwrite = new System.Windows.Forms.CheckBox();
+            this.checkBoxOnlyNewFiles = new System.Windows.Forms.CheckBox();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.quitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -79,6 +92,7 @@
             this.layoutPanel.Controls.Add(this.labelFiles, 1, 2);
             this.layoutPanel.Controls.Add(this.labelFilesLabel, 0, 2);
             this.layoutPanel.Controls.Add(this.checkBoxOverwrite, 1, 4);
+            this.layoutPanel.Controls.Add(this.checkBoxOnlyNewFiles, 1, 3);
             this.layoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.layoutPanel.Location = new System.Drawing.Point(0, 28);
             this.layoutPanel.Margin = new System.Windows.Forms.Padding(4);
@@ -90,14 +104,14 @@
             this.layoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.layoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.layoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.layoutPanel.Size = new System.Drawing.Size(965, 609);
+            this.layoutPanel.Size = new System.Drawing.Size(1213, 660);
             this.layoutPanel.TabIndex = 0;
             // 
             // buttonImport
             // 
             this.buttonImport.Dock = System.Windows.Forms.DockStyle.Fill;
             this.buttonImport.Enabled = false;
-            this.buttonImport.Location = new System.Drawing.Point(818, 89);
+            this.buttonImport.Location = new System.Drawing.Point(1066, 89);
             this.buttonImport.Name = "buttonImport";
             this.buttonImport.Size = new System.Drawing.Size(144, 34);
             this.buttonImport.TabIndex = 9;
@@ -119,7 +133,7 @@
             // buttonSelectSource
             // 
             this.buttonSelectSource.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buttonSelectSource.Location = new System.Drawing.Point(818, 3);
+            this.buttonSelectSource.Location = new System.Drawing.Point(1066, 3);
             this.buttonSelectSource.Name = "buttonSelectSource";
             this.buttonSelectSource.Size = new System.Drawing.Size(144, 40);
             this.buttonSelectSource.TabIndex = 1;
@@ -134,8 +148,9 @@
             this.comboBoxSource.FormattingEnabled = true;
             this.comboBoxSource.Location = new System.Drawing.Point(153, 3);
             this.comboBoxSource.Name = "comboBoxSource";
-            this.comboBoxSource.Size = new System.Drawing.Size(659, 36);
+            this.comboBoxSource.Size = new System.Drawing.Size(907, 36);
             this.comboBoxSource.TabIndex = 2;
+            this.comboBoxSource.SelectedIndexChanged += new System.EventHandler(this.ComboBoxSourceSelectedIndexChanged);
             this.comboBoxSource.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxSourceFormat);
             this.comboBoxSource.SelectedValueChanged += new System.EventHandler(this.ComboBoxSourceSelectedValueChanged);
             // 
@@ -156,15 +171,16 @@
             this.comboBoxProfile.FormattingEnabled = true;
             this.comboBoxProfile.Location = new System.Drawing.Point(153, 49);
             this.comboBoxProfile.Name = "comboBoxProfile";
-            this.comboBoxProfile.Size = new System.Drawing.Size(659, 36);
+            this.comboBoxProfile.Size = new System.Drawing.Size(907, 36);
             this.comboBoxProfile.Sorted = true;
             this.comboBoxProfile.TabIndex = 4;
+            this.comboBoxProfile.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxProfileFormat);
             this.comboBoxProfile.SelectedValueChanged += new System.EventHandler(this.ComboBoxProfileSelectedValueChanged);
             // 
             // buttonEditProfile
             // 
             this.buttonEditProfile.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buttonEditProfile.Location = new System.Drawing.Point(818, 49);
+            this.buttonEditProfile.Location = new System.Drawing.Point(1066, 49);
             this.buttonEditProfile.Name = "buttonEditProfile";
             this.buttonEditProfile.Size = new System.Drawing.Size(144, 34);
             this.buttonEditProfile.TabIndex = 5;
@@ -184,7 +200,7 @@
             this.textBoxProtocol.Name = "textBoxProtocol";
             this.textBoxProtocol.ReadOnly = true;
             this.textBoxProtocol.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxProtocol.Size = new System.Drawing.Size(959, 397);
+            this.textBoxProtocol.Size = new System.Drawing.Size(1207, 448);
             this.textBoxProtocol.TabIndex = 6;
             this.textBoxProtocol.WordWrap = false;
             // 
@@ -193,31 +209,124 @@
             this.contextMenuProtocol.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuProtocol.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.clearProtocolButton,
-            this.verboseProtocolButton});
+            this.outputProtocolButton,
+            this.toolStripSeparator1,
+            this.noneProtocolButton,
+            this.informationProtocolButton,
+            this.warningProtocolButton,
+            this.errorProtocolButton,
+            this.criticalProtocolButton,
+            this.verboseProtocolButton,
+            this.toolStripSeparator2,
+            this.activityProtocolButton});
             this.contextMenuProtocol.Name = "contextMenuProtocol";
-            this.contextMenuProtocol.Size = new System.Drawing.Size(132, 52);
+            this.contextMenuProtocol.Size = new System.Drawing.Size(157, 232);
             // 
             // clearProtocolButton
             // 
             this.clearProtocolButton.Name = "clearProtocolButton";
-            this.clearProtocolButton.Size = new System.Drawing.Size(131, 24);
+            this.clearProtocolButton.Size = new System.Drawing.Size(156, 24);
             this.clearProtocolButton.Text = "Clear";
             this.clearProtocolButton.ToolTipText = "Clears the protocol window.";
             this.clearProtocolButton.Click += new System.EventHandler(this.ClearProtocolButtonClick);
             // 
+            // outputProtocolButton
+            // 
+            this.outputProtocolButton.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.dateTimeProtocolButton,
+            this.contextProtocolButton,
+            this.threadProtocolButton});
+            this.outputProtocolButton.Name = "outputProtocolButton";
+            this.outputProtocolButton.Size = new System.Drawing.Size(156, 24);
+            this.outputProtocolButton.Text = "Output";
+            // 
+            // dateTimeProtocolButton
+            // 
+            this.dateTimeProtocolButton.Name = "dateTimeProtocolButton";
+            this.dateTimeProtocolButton.Size = new System.Drawing.Size(224, 26);
+            this.dateTimeProtocolButton.Text = "Date/Tiime";
+            this.dateTimeProtocolButton.Click += new System.EventHandler(this.OutputProtocolButtonClick);
+            // 
+            // contextProtocolButton
+            // 
+            this.contextProtocolButton.Name = "contextProtocolButton";
+            this.contextProtocolButton.Size = new System.Drawing.Size(224, 26);
+            this.contextProtocolButton.Text = "Context";
+            this.contextProtocolButton.Click += new System.EventHandler(this.OutputProtocolButtonClick);
+            // 
+            // threadProtocolButton
+            // 
+            this.threadProtocolButton.Name = "threadProtocolButton";
+            this.threadProtocolButton.Size = new System.Drawing.Size(224, 26);
+            this.threadProtocolButton.Text = "Thread";
+            this.threadProtocolButton.Click += new System.EventHandler(this.OutputProtocolButtonClick);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(153, 6);
+            // 
+            // noneProtocolButton
+            // 
+            this.noneProtocolButton.Name = "noneProtocolButton";
+            this.noneProtocolButton.Size = new System.Drawing.Size(156, 24);
+            this.noneProtocolButton.Text = "None";
+            this.noneProtocolButton.Click += new System.EventHandler(this.LevelProtocolButtonClick);
+            // 
+            // informationProtocolButton
+            // 
+            this.informationProtocolButton.Name = "informationProtocolButton";
+            this.informationProtocolButton.Size = new System.Drawing.Size(156, 24);
+            this.informationProtocolButton.Text = "Information";
+            this.informationProtocolButton.Click += new System.EventHandler(this.LevelProtocolButtonClick);
+            // 
+            // warningProtocolButton
+            // 
+            this.warningProtocolButton.Name = "warningProtocolButton";
+            this.warningProtocolButton.Size = new System.Drawing.Size(156, 24);
+            this.warningProtocolButton.Text = "Warning";
+            this.warningProtocolButton.Click += new System.EventHandler(this.LevelProtocolButtonClick);
+            // 
+            // errorProtocolButton
+            // 
+            this.errorProtocolButton.Name = "errorProtocolButton";
+            this.errorProtocolButton.Size = new System.Drawing.Size(156, 24);
+            this.errorProtocolButton.Text = "Error";
+            this.errorProtocolButton.Click += new System.EventHandler(this.LevelProtocolButtonClick);
+            // 
+            // criticalProtocolButton
+            // 
+            this.criticalProtocolButton.Name = "criticalProtocolButton";
+            this.criticalProtocolButton.Size = new System.Drawing.Size(156, 24);
+            this.criticalProtocolButton.Text = "Critial";
+            this.criticalProtocolButton.Click += new System.EventHandler(this.LevelProtocolButtonClick);
+            // 
             // verboseProtocolButton
             // 
             this.verboseProtocolButton.Name = "verboseProtocolButton";
-            this.verboseProtocolButton.Size = new System.Drawing.Size(131, 24);
+            this.verboseProtocolButton.Size = new System.Drawing.Size(156, 24);
             this.verboseProtocolButton.Text = "Verbose";
-            this.verboseProtocolButton.Click += new System.EventHandler(this.VerboseProtocolButtonClick);
+            this.verboseProtocolButton.Click += new System.EventHandler(this.LevelProtocolButtonClick);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(153, 6);
+            // 
+            // activityProtocolButton
+            // 
+            this.activityProtocolButton.Name = "activityProtocolButton";
+            this.activityProtocolButton.Size = new System.Drawing.Size(156, 24);
+            this.activityProtocolButton.Tag = "";
+            this.activityProtocolButton.Text = "Activity";
+            this.activityProtocolButton.Click += new System.EventHandler(this.ActivityProtocolButtonClick);
             // 
             // labelFiles
             // 
             this.labelFiles.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelFiles.Location = new System.Drawing.Point(153, 86);
             this.labelFiles.Name = "labelFiles";
-            this.labelFiles.Size = new System.Drawing.Size(659, 40);
+            this.labelFiles.Size = new System.Drawing.Size(907, 40);
             this.labelFiles.TabIndex = 7;
             // 
             // labelFilesLabel
@@ -234,11 +343,22 @@
             this.checkBoxOverwrite.Dock = System.Windows.Forms.DockStyle.Fill;
             this.checkBoxOverwrite.Location = new System.Drawing.Point(153, 169);
             this.checkBoxOverwrite.Name = "checkBoxOverwrite";
-            this.checkBoxOverwrite.Size = new System.Drawing.Size(659, 34);
+            this.checkBoxOverwrite.Size = new System.Drawing.Size(907, 34);
             this.checkBoxOverwrite.TabIndex = 10;
             this.checkBoxOverwrite.Text = "Overwrite existing files";
             this.checkBoxOverwrite.UseVisualStyleBackColor = true;
             this.checkBoxOverwrite.CheckedChanged += new System.EventHandler(this.CheckBoxOverwriteCheckedChanged);
+            // 
+            // checkBoxOnlyNewFiles
+            // 
+            this.checkBoxOnlyNewFiles.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.checkBoxOnlyNewFiles.Location = new System.Drawing.Point(153, 129);
+            this.checkBoxOnlyNewFiles.Name = "checkBoxOnlyNewFiles";
+            this.checkBoxOnlyNewFiles.Size = new System.Drawing.Size(907, 34);
+            this.checkBoxOnlyNewFiles.TabIndex = 11;
+            this.checkBoxOnlyNewFiles.Text = "Import only new files";
+            this.checkBoxOnlyNewFiles.UseVisualStyleBackColor = true;
+            this.checkBoxOnlyNewFiles.CheckedChanged += new System.EventHandler(this.CheckBoxOnlyNewFilesCheckedChanged);
             // 
             // menuStrip
             // 
@@ -248,7 +368,7 @@
             this.helpMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Size = new System.Drawing.Size(965, 28);
+            this.menuStrip.Size = new System.Drawing.Size(1213, 28);
             this.menuStrip.TabIndex = 6;
             this.menuStrip.Text = "menuStrip1";
             // 
@@ -298,9 +418,9 @@
             this.statusLabel,
             this.statusSpring,
             this.statusProgressBar});
-            this.statusStrip.Location = new System.Drawing.Point(0, 637);
+            this.statusStrip.Location = new System.Drawing.Point(0, 688);
             this.statusStrip.Name = "statusStrip";
-            this.statusStrip.Size = new System.Drawing.Size(965, 26);
+            this.statusStrip.Size = new System.Drawing.Size(1213, 26);
             this.statusStrip.TabIndex = 6;
             // 
             // statusLabel
@@ -312,7 +432,7 @@
             // statusSpring
             // 
             this.statusSpring.Name = "statusSpring";
-            this.statusSpring.Size = new System.Drawing.Size(897, 20);
+            this.statusSpring.Size = new System.Drawing.Size(1145, 20);
             this.statusSpring.Spring = true;
             // 
             // statusProgressBar
@@ -328,7 +448,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 28F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(965, 663);
+            this.ClientSize = new System.Drawing.Size(1213, 714);
             this.Controls.Add(this.layoutPanel);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.menuStrip);
@@ -379,5 +499,18 @@
         private Label labelFilesLabel;
         private Button buttonImport;
         private CheckBox checkBoxOverwrite;
+        private CheckBox checkBoxOnlyNewFiles;
+        private ToolStripSeparator toolStripSeparator1;
+        private ToolStripSeparator toolStripSeparator2;
+        private ToolStripMenuItem activityProtocolButton;
+        private ToolStripMenuItem noneProtocolButton;
+        private ToolStripMenuItem informationProtocolButton;
+        private ToolStripMenuItem warningProtocolButton;
+        private ToolStripMenuItem errorProtocolButton;
+        private ToolStripMenuItem criticalProtocolButton;
+        private ToolStripMenuItem outputProtocolButton;
+        private ToolStripMenuItem dateTimeProtocolButton;
+        private ToolStripMenuItem contextProtocolButton;
+        private ToolStripMenuItem threadProtocolButton;
     }
 }

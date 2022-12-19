@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection;
 using ImageImport.Sources;
 using Toolbox;
+using Toolbox.Collection.Generics;
 using Toolbox.Xml.Settings;
 
 namespace ImageImport
@@ -12,19 +14,49 @@ namespace ImageImport
         {
             InitializeComponent();
 
-            AppendProtocolAction = new Action<string>(AppendProtocol);
-
             Settings = UserSettings.Get<ImportSettings>();
 
-            FoundFiles.ListChanged += FoundFilesListChanged;
+            ProtocolListener = new ProtocolTraceListener(textBoxProtocol);
+
+            noneProtocolButton.Tag = 0;
+            informationProtocolButton.Tag = SourceLevels.Information;
+            warningProtocolButton.Tag = SourceLevels.Warning;
+            errorProtocolButton.Tag = SourceLevels.Error;
+            criticalProtocolButton.Tag = SourceLevels.Critical;
+            verboseProtocolButton.Tag = SourceLevels.Verbose;
+
+            LevelButtons = new[]
+            {
+                noneProtocolButton,
+                informationProtocolButton,
+                warningProtocolButton,
+                errorProtocolButton,
+                criticalProtocolButton,
+                verboseProtocolButton
+            };
+
+            dateTimeProtocolButton.Tag = TraceOptions.DateTime;
+            contextProtocolButton.Tag = TraceOptions.LogicalOperationStack;
+            threadProtocolButton.Tag = TraceOptions.ThreadId;
+
+            Tracer.Listener.Add(ProtocolListener);
+            Trace.AutoFlush = true;
+
+            activityProtocolButton.PerformClick();
+            errorProtocolButton.PerformClick();
+
+            dateTimeProtocolButton.PerformClick();
+            contextProtocolButton.PerformClick();
         }
+
+        public ProtocolTraceListener ProtocolListener { get; }
 
         public ImportSettings Settings { get; }
         public ImportOptions Options { get; set; } = new ImportOptions();
 
         private void MainFormLoad(object sender, EventArgs e)
         {
-            layoutPanel.RowStyles[0].Height 
+            layoutPanel.RowStyles[0].Height
                 = layoutPanel.RowStyles[1].Height
                 = comboBoxSource.Height + comboBoxSource.Margin.Vertical;
 
@@ -39,10 +71,10 @@ namespace ImageImport
         {
             if (Options.Folder.NotEmpty())
             {
-                var source = Settings.Sources.OfType<FileSource>().FirstOrDefault(s => s.Folder == Options.Folder);
+                var source = Settings.Sources.OfType<DriveSource>().FirstOrDefault(s => s.Folder == Options.Folder);
                 if (source == null)
-                { 
-                    source = new FileSource { Folder = Options.Folder };
+                {
+                    source = new DriveSource { Folder = Options.Folder };
                     Settings.Sources.Add(source);
                     Settings.Save();
                 }
@@ -58,9 +90,9 @@ namespace ImageImport
                 Sources = Settings.Sources,
                 SelectedSource = Source
             };
-            selectForm.ShowDialog(this);            
+            selectForm.ShowDialog(this);
             Settings.Save();
-            DispatchScan();
+            Source?.DispatchScan();
         }
 
         private void ComboBoxSourceFormat(object sender, ListControlConvertEventArgs e)
@@ -68,6 +100,14 @@ namespace ImageImport
             if (e.ListItem is ImageSource source)
             {
                 e.Value = source.Description;
+            }
+        }
+
+        private void ComboBoxProfileFormat(object sender, ListControlConvertEventArgs e)
+        {
+            if (e.ListItem is Profile profile)
+            {
+                e.Value = profile.Name;
             }
         }
 
@@ -80,7 +120,7 @@ namespace ImageImport
             };
             editForm.ShowDialog(this);
             Settings.Save();
-            DispatchScan();
+            UpdateFiles();
         }
 
         private void QuitMenuItemClick(object sender, EventArgs e)
@@ -104,167 +144,132 @@ namespace ImageImport
 
         private void ComboBoxSourceSelectedValueChanged(object sender, EventArgs e)
         {
-            DispatchScan();
+            Source = (ImageSource)comboBoxSource.SelectedItem;
+        }
+
+        private void ComboBoxSourceSelectedIndexChanged(object sender, EventArgs e)
+        {
         }
 
         private void ComboBoxProfileSelectedValueChanged(object sender, EventArgs e)
         {
-            if (Profile == null)
-            {
-                checkBoxOverwrite.Checked = false;
-                checkBoxOverwrite.Enabled = false;
-            }
-            else
+            Profile = (Profile)comboBoxProfile.SelectedItem;
+
+            if (Profile != null)
             {
                 checkBoxOverwrite.Enabled = true;
                 checkBoxOverwrite.Checked = Profile.Overwrite;
-            }
-            DispatchScan();
-        }
-
-        private ImageSource Source => (ImageSource)comboBoxSource.SelectedItem;
-        private Profile Profile => (Profile)comboBoxProfile.SelectedItem;
-
-        public BindingList<ImageFile> FoundFiles { get; } = new BindingList<ImageFile>();
-        public List<ImageFile> SelectedFiles { get; } = new List<ImageFile>();
-
-        private void FoundFilesListChanged(object? sender, ListChangedEventArgs e)
-        {
-            switch (e.ListChangedType)
-            {
-                case ListChangedType.Reset:
-                    FilterFiles();
-                    break;
-                case ListChangedType.ItemAdded:
-                    AddFile(FoundFiles[e.NewIndex]);
-                    break;
-            }
-        }
-
-        private void AddFile(ImageFile file)
-        {
-            AppendProtocolVerbose($"found {file.FullName}");
-            if (Profile.CanImport(file))
-            {
-                SelectedFiles.Add(file);
-                EnableImport();
-            }
-        }
-
-        private void FilterFiles()
-        {
-            SelectedFiles.Clear();
-            SelectedFiles.AddRange(FoundFiles.Where(f => Profile.CanImport(f)));
-            EnableImport();
-        }
-
-        private void EnableImport()
-        {
-            labelFiles.Text = $"{SelectedFiles.Count:#,##0} images found.";
-            buttonImport.Enabled = ScanThread == null && SelectedFiles.Any();
-        }
-        private void DispatchScan()
-        {
-            if (Source == null || Profile == null) return;
-
-            UseWaitCursor = true;
-
-            if (ScanThread != null)
-            {
-                CancelScan = true;
-                ScanThread.Join();
-                ScanThread = null;
-            }
-            
-            comboBoxSource.Enabled = false;
-            buttonSelectSource.Enabled = false;
-            
-            statusProgressBar.Style = ProgressBarStyle.Marquee;
-            statusProgressBar.Visible = true;
-            statusLabel.Text = "Scanning...";
-
-            FoundFiles.Clear();
-                       
-            CancelScan = false;
-            ScanThread = new Thread(Scan)
-            {
-                Name = "Scan",
-                IsBackground = true,
-                Priority = ThreadPriority.BelowNormal
-            };
-            ScanThread.Start(Source);
-
-            UseWaitCursor = false;
-        }
-        private bool CancelScan { get; set; }
-        private Thread? ScanThread { get; set; }
-
-        private void Scan(object? obj)
-        {
-            if (obj == null) throw new NullReferenceException("No image source given for scan.");
-
-            var source = (ImageSource)obj;
-
-            try
-            {
-                source.InitScan();
-
-                foreach (var file in source.EnumerateFiles())
+                if (Source?.Token != null)
                 {
-                    if (CancelScan) break;
-                    Invoke(() => AddFile(file));
-                }                               
+                    checkBoxOnlyNewFiles.Enabled = true;
+                    checkBoxOnlyNewFiles.Checked = Profile.OnlyNewFiles;
+                }
             }
-            catch (Exception exception)
+            else
             {
-                AppendProtocol(exception.ToString());
+                checkBoxOverwrite.Enabled = false;
+                checkBoxOverwrite.Checked = false;
+                checkBoxOnlyNewFiles.Enabled = false;
+                checkBoxOnlyNewFiles.Checked = false;
             }
-            finally
+            UpdateFiles();
+        }
+
+        private ImageSource? source;
+        private Profile? profile;
+
+        private ImageSource? Source
+        {
+            get => source;
+            set
             {
-                source.CompleteScan();
-                if (!CancelScan)
+                if (source == value) return;
+
+                if (source != null)
                 {
-                    ScanThread = null;
-                    Invoke(ScanCompleted);
+                    source.Files.ListChanged -= SourceFilesListChanged;
+                    source.PropertyChanged -= SourcePropertyChanged;
+                }
+
+                source = value;
+                if (source != null)
+                {
+                    UpdateFiles();
+
+                    source.PropertyChanged += SourcePropertyChanged;
+                    source.Files.ListChanged += SourceFilesListChanged;
+                    source.DispatchScan();
                 }
             }
         }
 
-        private void ScanCompleted()
-        {
-            statusLabel.Text = "Ready";
-            statusProgressBar.Visible = false;
-
-            comboBoxSource.Enabled = true;
-            buttonSelectSource.Enabled = true;
-            comboBoxProfile.Enabled = true;
-            buttonEditProfile.Enabled = true;
-
-            EnableImport();
-        }
-
-        private bool VerboseProtocol { get; set; }
-
-        private Action<string> AppendProtocolAction { get; }
-        private void AppendProtocol(string text)
+        private void SourceFilesListChanged(object? sender, ListChangedEventArgs e)
         {
             if (InvokeRequired)
-                BeginInvoke(AppendProtocolAction, text);
+                BeginInvoke(() => SourceFilesListChanged(sender, e));
             else
             {
-                if (textBoxProtocol.Text.Any())
-                    textBoxProtocol.AppendText(Environment.NewLine);
-                textBoxProtocol.AppendText(text);
-                textBoxProtocol.SelectionLength = 0;
-                textBoxProtocol.SelectionStart = textBoxProtocol.TextLength;
-                textBoxProtocol.ScrollToCaret();
+                UpdateFiles();
             }
         }
 
-        private void AppendProtocolVerbose(string text)
+        private List<ImageFileBase> Files { get; } = new List<ImageFileBase>();
+
+        private void UpdateFiles()
         {
-            if (VerboseProtocol)
-                AppendProtocol(text);
+            buttonImport.Enabled = false;
+
+            if (Source != null)
+            {
+                labelFiles.Text = $"{Source.State} {Source.Files.Count:#,##0} files";
+                if (Profile != null)
+                {
+                    lock (Source.Files)
+                    {
+                        Files.Clear();
+
+                        Files.AddRange(Source.Files
+                            .Where(f => !checkBoxOnlyNewFiles.Enabled || !checkBoxOnlyNewFiles.Checked || f.Created > Source.LastImport)
+                            .Where(f => Profile.CanImport(f)));
+
+                        labelFiles.Text += $" -> {Files.Count:#,##0} to import";
+                        buttonImport.Enabled = Source.State == SourceState.Scanned && Files.Count > 0;
+                    }
+                }
+            }
+            else
+                labelFiles.Text = "";
+        }
+
+        private void SourcePropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (InvokeRequired)
+                BeginInvoke(() => SourcePropertyChanged(sender, e));
+            else
+            {
+                if (sender is ImageSource source)
+                {
+                    switch (e.PropertyName)
+                    {
+                        case nameof(Source.State):
+                            UpdateFiles();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+
+        private Profile? Profile
+        {
+            get => profile;
+            set
+            {
+                if (profile == value) return;
+                profile = value;
+                UpdateFiles();
+            }
         }
 
         private void ClearProtocolButtonClick(object sender, EventArgs e)
@@ -272,13 +277,10 @@ namespace ImageImport
             textBoxProtocol.Text = "";
         }
 
-        private void VerboseProtocolButtonClick(object sender, EventArgs e)
-        {
-            verboseProtocolButton.Checked = VerboseProtocol = !VerboseProtocol;
-        }
-
         private void ButtonImportClick(object sender, EventArgs e)
         {
+            if (Source == null || Profile == null) return;
+
             CancelImport = false;
             ImportThread = new Thread(Import)
             {
@@ -294,14 +296,13 @@ namespace ImageImport
                 buttonImport.Enabled = false;
 
             statusProgressBar.Value = 0;
-            statusProgressBar.Maximum = SelectedFiles.Count;
+            statusProgressBar.Maximum = Files.Count;
             statusProgressBar.Style = ProgressBarStyle.Continuous;
             statusProgressBar.Visible = true;
 
             statusLabel.Text = "Importing";
-            
-            textBoxProtocol.Text = "";
 
+            textBoxProtocol.Text = "";
             ImportThread.Start(new Tuple<ImageSource, Profile>(Source, Profile));
         }
 
@@ -317,50 +318,55 @@ namespace ImageImport
 
             try
             {
+                Tracer.StartOperation("Import");
+
+                Tracer.TraceStart($"from {source.Description} with profile {profile.Name}");
+
                 source.InitImport();
 
-                foreach (var file in SelectedFiles)
+                foreach (var file in Files)
                 {
                     if (CancelImport) break;
 
-                    AppendProtocol($"import {file.FullName}");
-                    try
-                    {
-                        source.Import(file, profile, AppendProtocol, AppendProtocolVerbose);
-                    }
-                    catch (Exception importException)
-                    {
-                        AppendProtocol(importException.ToString());
-                    }
-                    
-                    Invoke(() => statusProgressBar.Value++);                    
+                    source.Import(file, profile);
+
+                    Invoke(() => statusProgressBar.Value++);
                 }
             }
             catch (Exception exception)
             {
-                AppendProtocol(exception.ToString());
+                Tracer.TraceException(exception, 547);
             }
             finally
             {
                 source.CompleteImport();
+
                 ImportThread = null;
-                Invoke(ImportCompleted);
+                Invoke(ImportCompleted, source);
+
+                Tracer.TraceStop("import");
+                Tracer.StopOperation();
             }
         }
 
-        private void ImportCompleted()
+        private void ImportCompleted(ImageSource source)
         {
-            AppendProtocol("");
-            AppendProtocol("finished results:");
-            if (Source.Imported > 0) AppendProtocol($"- imported {Source.Imported:#,##0}");
-            if (Source.Skipped > 0) AppendProtocol($"- skipped {Source.Skipped:#,##0}");
-            if (Source.Failed > 0) AppendProtocol($"- failed {Source.Failed:#,##0}");
-
             comboBoxSource.Enabled =
                 buttonSelectSource.Enabled =
                 comboBoxProfile.Enabled =
                 buttonEditProfile.Enabled =
                 buttonImport.Enabled = true;
+
+            var files = new List<string>();
+
+            if (source.Imported > 0)
+                files.Add($"{source.Imported} imported");
+            if (source.Skipped > 0)
+                files.Add($"{source.Skipped} skipped");
+            if (source.Failed > 0)
+                files.Add($"{source.Failed} failed");
+
+            labelFiles.Text += $" -> {string.Join(" / ", files)}";
 
             statusLabel.Text = "Ready";
             statusProgressBar.Visible = false;
@@ -368,7 +374,62 @@ namespace ImageImport
 
         private void CheckBoxOverwriteCheckedChanged(object sender, EventArgs e)
         {
-            if (Profile != null) Profile.Overwrite = checkBoxOverwrite.Checked;
+            if (checkBoxOnlyNewFiles.Enabled && Profile != null)
+            {
+                Profile.Overwrite = checkBoxOverwrite.Checked;
+                UpdateFiles();
+            }
+        }
+
+        private void CheckBoxOnlyNewFilesCheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxOnlyNewFiles.Enabled && Profile != null)
+            {
+                Profile.OnlyNewFiles = checkBoxOnlyNewFiles.Checked;
+                UpdateFiles();
+            }
+        }
+
+        private void ActivityProtocolButtonClick(object sender, EventArgs e)
+        {
+            activityProtocolButton.Checked = !activityProtocolButton.Checked;
+            if (activityProtocolButton.Checked)
+                Tracer.Switch.Level |= SourceLevels.ActivityTracing;
+            else
+                Tracer.Switch.Level &= ~SourceLevels.ActivityTracing;
+        }
+
+        public ToolStripMenuItem[] LevelButtons { get; }
+        private void LevelProtocolButtonClick(object sender, EventArgs e)
+        {
+            var button = (ToolStripMenuItem)sender;
+            var level = (SourceLevels)button.Tag;
+
+            Tracer.Switch.Level &= ~SourceLevels.Verbose;
+            Tracer.Switch.Level |= level;
+
+            LevelButtons.ForEach(b => b.Checked = false);
+            button.Checked = true;
+        }
+
+        private void ToogleProtocolOutputOption(object sender)
+        {
+            if (sender is ToolStripMenuItem button)
+            {
+                button.Checked = !button.Checked;
+                var flag = (TraceOptions)button.Tag;
+
+                if (button.Checked)
+                    ProtocolListener.TraceOutputOptions |= flag;
+                else
+                    ProtocolListener.TraceOutputOptions &= ~flag;
+            }
+
+        }
+
+        private void OutputProtocolButtonClick(object sender, EventArgs e)
+        {
+            ToogleProtocolOutputOption(sender);
         }
     }
 }

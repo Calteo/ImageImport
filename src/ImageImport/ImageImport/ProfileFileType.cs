@@ -90,7 +90,7 @@ namespace ImageImport
             return $"[{extensions}]->";
         }
 
-        internal string GetTarget(ImageFile file)
+        internal string GetTarget(ImageFileBase file)
         {
             var target = ParameterExpression.Replace(Pattern, m => LookupParameter(file, m));
             if (Folder.NotEmpty())
@@ -99,21 +99,21 @@ namespace ImageImport
             return target;
         }
 
-        private static string LookupParameter(ImageFile file, Match match)
+        private static string LookupParameter(ImageFileBase file, Match match)
         {
             var name = match.Groups["name"].Value;
 
-            if (file.Parameters.TryGetValue(name, out var parameter))
+            if (file.MetaDictionary.Values.TryGetValue(name, out var parameter))
             {
                 if (match.Groups["format"].Success)
                 {
                     var format = match.Groups["format"].Value;
-                    return string.Format("{0:"+format+"}", parameter);
+                    return string.Format("{0:"+format+"}", parameter.Value);
                 }
-                return parameter.ToString() ?? "(null)";
+                return parameter.Value.ToString() ?? "(null)";
             }
 
-            return match.Value;
+            throw new KeyNotFoundException($"Parameter {name} not found in metadata.");
         }
     }
 }

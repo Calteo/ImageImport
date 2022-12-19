@@ -8,7 +8,7 @@ using Toolbox;
 namespace ImageImport.Sources
 {
     [DefaultProperty(nameof(Folder))]
-    internal class FileSource : ImageSource
+    internal class DriveSource : ImageSource
     {        
         public override string Description => Folder.NotEmpty() ? Folder : "<unknown folder>";
 
@@ -27,6 +27,7 @@ namespace ImageImport.Sources
                 folder = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(Description));
+                ResetScan();
             }
         }
         #endregion
@@ -36,24 +37,35 @@ namespace ImageImport.Sources
             return IconStore.GetIcon("folder", 32);
         }
 
-        public override IEnumerable<ImageFile> EnumerateFiles()
+        public override IEnumerable<ImageFileBase> EnumerateFiles()
         {
             var enumerable = Directory.EnumerateFiles(Folder, "*", Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
             var enumerator = enumerable.GetEnumerator();
             while (enumerator.MoveNext())
             {
-                yield return new ImageFile(enumerator.Current);
+                yield return new DriveFile(this, enumerator.Current, File.GetCreationTime(enumerator.Current));
             }
         }
 
-        public override Stream GetStream(ImageFile file)
-        {
-            return new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
-        }
-
-        protected override void Copy(ImageFile file, string target)
+        protected override void Copy(ImageFileBase file, string target)
         {
             File.Copy(file.FullName, target, true);
+        }
+
+        protected override Stream? OpenToken(string fileName)
+        {
+            var fullFileName = Path.Combine(Folder, fileName);
+            if (File.Exists(fullFileName))
+                return new FileStream(fullFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            return null;
+        }
+
+        protected override void SaveToken(Stream stream, string fileName)
+        {
+            var fullFileName = Path.Combine(Folder, fileName);
+            using var fileStream = new FileStream(fullFileName, FileMode.Create, FileAccess.Write, FileShare.None);
+            stream.CopyTo(fileStream);
         }
     }
 }

@@ -53,7 +53,7 @@
             this.deleteButton});
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(679, 39);
+            this.toolStrip.Size = new System.Drawing.Size(857, 39);
             this.toolStrip.TabIndex = 0;
             // 
             // addButton
@@ -89,8 +89,8 @@
             // splitContainer.Panel2
             // 
             this.splitContainer.Panel2.Controls.Add(this.propertyGrid);
-            this.splitContainer.Size = new System.Drawing.Size(679, 382);
-            this.splitContainer.SplitterDistance = 330;
+            this.splitContainer.Size = new System.Drawing.Size(857, 497);
+            this.splitContainer.SplitterDistance = 416;
             this.splitContainer.TabIndex = 1;
             // 
             // listView
@@ -100,7 +100,7 @@
             this.listView.GridLines = true;
             this.listView.Location = new System.Drawing.Point(0, 0);
             this.listView.Name = "listView";
-            this.listView.Size = new System.Drawing.Size(330, 382);
+            this.listView.Size = new System.Drawing.Size(416, 497);
             this.listView.SmallImageList = this.imageListSources;
             this.listView.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.listView.TabIndex = 0;
@@ -113,7 +113,7 @@
             this.imageListSources.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
             this.imageListSources.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageListSources.ImageStream")));
             this.imageListSources.TransparentColor = System.Drawing.Color.Transparent;
-            this.imageListSources.Images.SetKeyName(0, "FileSource");
+            this.imageListSources.Images.SetKeyName(0, "DriveSource");
             this.imageListSources.Images.SetKeyName(1, "FtpSource");
             // 
             // propertyGrid
@@ -123,14 +123,14 @@
             this.propertyGrid.Location = new System.Drawing.Point(0, 0);
             this.propertyGrid.Name = "propertyGrid";
             this.propertyGrid.PropertySort = System.Windows.Forms.PropertySort.Categorized;
-            this.propertyGrid.Size = new System.Drawing.Size(345, 382);
+            this.propertyGrid.Size = new System.Drawing.Size(437, 497);
             this.propertyGrid.TabIndex = 0;
             // 
             // SelectSourceForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 28F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(679, 421);
+            this.ClientSize = new System.Drawing.Size(857, 536);
             this.Controls.Add(this.splitContainer);
             this.Controls.Add(this.toolStrip);
             this.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
