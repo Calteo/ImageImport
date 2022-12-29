@@ -14,7 +14,7 @@ on:
 env:
   BUILD_VERSION: "1.0.${{ github.run_number }}"
   CHOCOLATELY_PACKAGE: "chocolateley\\image-import.nuspec"
-  RELEASE_CHOCOLATELY: true
+  RELEASE_CHOCOLATELY: false
 
 jobs:
 
@@ -163,6 +163,7 @@ jobs:
 
   push_chocolately:
     name: Push Chocolately
+    if: ${{ env.RELEASE_CHOCOLATELY }}
     needs: pack_chocolately
     runs-on: windows-latest
 
@@ -171,7 +172,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: artifact
-    - name: Push package to chocolately
+    - name: Push package to chocolately      
       uses: crazy-max/ghaction-chocolatey@v2
       with:
         args: push Image-Import.${{ env.BUILD_VERSION }}.nupkg --source https://push.chocolatey.org/ --api-key ${{ secrets.CHOCOLATELY_TOKEN }}
