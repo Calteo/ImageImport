@@ -77,7 +77,7 @@ namespace ImageImport
         }
         internal HashSet<string> Parameters { get; } = new HashSet<string>();
         #endregion
-        private Regex ParameterExpression { get; } = new Regex(@"(?<parameter>\$\((?<name>[ a-zA-Z/]+)(:(?<format>[^)]+))?)\)", RegexOptions.Compiled|RegexOptions.Singleline);
+        private Regex ParameterExpression { get; } = new Regex(@"(?<parameter>\$\((?<name>[ a-zA-Z/]+)(:(?<format>[^?)]+))?)(\?(?<default>[^)]*))?\)", RegexOptions.Compiled|RegexOptions.Singleline);
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string property = "")
@@ -113,7 +113,12 @@ namespace ImageImport
                 return parameter.Value.ToString() ?? "(null)";
             }
 
-            throw new KeyNotFoundException($"Parameter {name} not found in metadata.");
+            if (match.Groups["default"].Success)
+            {
+                return match.Groups["default"].Value;
+            }
+
+            throw new KeyNotFoundException($"Parameter {name} not found in metadata and no default gieven.");
         }
     }
 }

@@ -6,7 +6,6 @@
         {
             Source = source;
         }
-
         public new T Source { get; }
     }
 }
