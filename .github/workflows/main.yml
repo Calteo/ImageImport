@@ -163,7 +163,7 @@ jobs:
 
   push_chocolately:
     name: Push Chocolately
-    if: ${{ env.RELEASE_CHOCOLATELY }}
+    if: env.RELEASE_CHOCOLATELY
     needs: pack_chocolately
     runs-on: windows-latest
 
