@@ -65,24 +65,28 @@ namespace ImageImport.Properties {
         ///&lt;head&gt;
         ///    &lt;style&gt;
         ///        th {
-        ///            text-align:left
+        ///            text-align: left;
+        ///            padding: 5px
         ///        }
         ///        body {
         ///            font-family: &apos;Microsoft Sans Serif&apos;
+        ///        }
+        ///        td
+        ///        {
+        ///            padding: 5px
         ///        }
         ///        tr.odd {
         ///            background-color: lightgrey
         ///        }
         ///        tr.even {
-        ///            background-color: lightblue
+        ///            background-color: lightsteelblue
         ///        }
         ///
         ///    &lt;/style&gt;
         ///&lt;/head&gt;
         ///&lt;body&gt;
         ///    &lt;h1&gt;Image Import&lt;/h1&gt;
-        ///    &lt;p&gt;This program is publish unter the &lt;a href=&quot;https://github.com/Calteo/ImageImport/blob/main/LICENSE&quot; target=&quot;_blank&quot;&gt;MIT&lt;/a&gt; licence.&lt;/p&gt;
-        ///    &lt;h1 [rest of string was truncated]&quot;;.
+        ///    &lt;p&gt;This program is publish unter the &lt;a href=&quot;https://g [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Licence {
             get {

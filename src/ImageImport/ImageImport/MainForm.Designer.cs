@@ -370,7 +370,6 @@
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Size = new System.Drawing.Size(1213, 28);
             this.menuStrip.TabIndex = 6;
-            this.menuStrip.Text = "menuStrip1";
             // 
             // fileMenuItem
             // 

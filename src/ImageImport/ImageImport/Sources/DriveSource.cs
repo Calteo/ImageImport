@@ -67,5 +67,13 @@ namespace ImageImport.Sources
             using var fileStream = new FileStream(fullFileName, FileMode.Create, FileAccess.Write, FileShare.None);
             stream.CopyTo(fileStream);
         }
+
+        protected override void Connect()
+        {
+        }
+
+        protected override void Disconnect()
+        {
+        }
     }
 }

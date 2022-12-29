@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
+using ImageImport.Icons;
 using ImageImport.Sources;
 using Toolbox;
 using Toolbox.Collection.Generics;
@@ -42,8 +43,14 @@ namespace ImageImport
             Tracer.Listener.Add(ProtocolListener);
             Trace.AutoFlush = true;
 
+            quitMenuItem.Image = IconStore.GetIcon("x_circle", 16).ToBitmap();
+            versionMenuItem.Image = IconStore.GetIcon("info", 16).ToBitmap();
+            licenceMenuItem.Image = IconStore.GetIcon("award", 16).ToBitmap();
+
             activityProtocolButton.PerformClick();
-            errorProtocolButton.PerformClick();
+            warningProtocolButton.PerformClick();
+            // errorProtocolButton.PerformClick();
+            // verboseProtocolButton.PerformClick();
 
             dateTimeProtocolButton.PerformClick();
             contextProtocolButton.PerformClick();
@@ -229,7 +236,7 @@ namespace ImageImport
                         Files.Clear();
 
                         Files.AddRange(Source.Files
-                            .Where(f => !checkBoxOnlyNewFiles.Enabled || !checkBoxOnlyNewFiles.Checked || f.Created > Source.LastImport)
+                            .Where(f => !checkBoxOnlyNewFiles.Enabled || !checkBoxOnlyNewFiles.Checked || f.Created > ( Source.LastImport ?? DateTime.MinValue) )
                             .Where(f => Profile.CanImport(f)));
 
                         labelFiles.Text += $" -> {Files.Count:#,##0} to import";
@@ -343,6 +350,7 @@ namespace ImageImport
 
                 ImportThread = null;
                 Invoke(ImportCompleted, source);
+                
 
                 Tracer.TraceStop("import");
                 Tracer.StopOperation();

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -162,10 +163,15 @@ namespace ImageImport.Sources
             }
         }
 
-        public virtual void InitScan()
+        abstract protected void Connect();
+        abstract protected void Disconnect();
+        
+        public void InitScan()
         {
             Tracer.StartOperation("scan");
             Tracer.TraceStart(Description);
+
+            Connect();
 
             var tokenName = ImportToken.FileName;
 
@@ -191,7 +197,9 @@ namespace ImageImport.Sources
         {
             Tracer.TraceInformation($"found {Files.Count:#,##0} files");
             Tracer.TraceVerbose($"state={State} / canceled={CancelScan}");
-            
+
+            Disconnect();
+
             Tracer.TraceStop(Description);
             Tracer.StopOperation();
         }
@@ -258,6 +266,8 @@ namespace ImageImport.Sources
         public virtual void InitImport()
         {
             Imported = Skipped = Failed = 0;
+
+            Connect();
         }
 
         public virtual void CompleteImport()
@@ -278,6 +288,10 @@ namespace ImageImport.Sources
             {
                 Tracer.TraceException(excption, 8596);
             }
+            finally
+            {
+                Disconnect();
+            }
         }        
 
         public void Import(ImageFileBase file, Profile profile)
@@ -286,7 +300,7 @@ namespace ImageImport.Sources
             Tracer.TraceInformation($"from {file.FullName}");
 
             try
-            {
+            {                
                 var fileType = profile.GetFileType(file);
 
                 if (fileType.Parameters.Any(p => !file.MetaDictionary.Contains(p)))
@@ -320,7 +334,7 @@ namespace ImageImport.Sources
                 Tracer.TraceException(exception, 125);
             }
             finally
-            {
+            {                
                 Tracer.StopOperation();
             }
         }

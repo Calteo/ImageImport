@@ -7,8 +7,7 @@ namespace ImageImport
     {
         public ProtocolTraceListener(TextBox textBox)
         {
-            TextBox = textBox;
-            TraceOutputOptions = TraceOptions.DateTime|TraceOptions.LogicalOperationStack|TraceOptions.ThreadId;
+            TextBox = textBox;            
         }
 
         public TextBox TextBox { get; }
