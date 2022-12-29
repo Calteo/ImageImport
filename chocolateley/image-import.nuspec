@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>image-import</id>
+    <version>0.0.1</version>
+    <title>Image Import</title>
+    <authors>Calteo</authors>
+    <projectUrl>https://github.com/Calteo/ImageImport</projectUrl>
+    <projectSourceUrl>https://github.com/Calteo/ImageImport</projectSourceUrl>
+    <!--<iconUrl>http://cdn.rawgit.com/__REPLACE_YOUR_REPO__/master/icons/slooh-explorer.png</iconUrl>-->
+    <copyright>2022 Calteo</copyright>
+    <licenseUrl>https://github.com/Calteo/ImageImport/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <tags>Image Import</tags>
+    <summary>Tool to import images from folder or ftp into sorted folders.</summary>
+    <description>The tool provides the options to setup different import profiles and automatically
+	    sort images into folders.
+	</description>  
+  </metadata>
+  <files>
+    <!-- this section controls what actually gets packaged into the Chocolatey package -->
+    <file src="tools\**" target="tools" />
+    <!--Building from Linux? You may need this instead: <file src="tools/**" target="tools" />-->
+  </files>
+</package>
