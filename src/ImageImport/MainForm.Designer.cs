@@ -60,6 +60,7 @@
             this.checkBoxOnlyNewFiles = new System.Windows.Forms.CheckBox();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.autoPlayMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.quitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.licenceMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -68,10 +69,12 @@
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusSpring = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.bindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.layoutPanel.SuspendLayout();
             this.contextMenuProtocol.SuspendLayout();
             this.menuStrip.SuspendLayout();
             this.statusStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource)).BeginInit();
             this.SuspendLayout();
             // 
             // layoutPanel
@@ -136,7 +139,7 @@
             this.buttonSelectSource.Location = new System.Drawing.Point(1066, 3);
             this.buttonSelectSource.Name = "buttonSelectSource";
             this.buttonSelectSource.Size = new System.Drawing.Size(144, 40);
-            this.buttonSelectSource.TabIndex = 1;
+            this.buttonSelectSource.TabIndex = 2;
             this.buttonSelectSource.Text = "&Select";
             this.buttonSelectSource.UseVisualStyleBackColor = true;
             this.buttonSelectSource.Click += new System.EventHandler(this.ButtonSelectSourceClick);
@@ -149,8 +152,7 @@
             this.comboBoxSource.Location = new System.Drawing.Point(153, 3);
             this.comboBoxSource.Name = "comboBoxSource";
             this.comboBoxSource.Size = new System.Drawing.Size(907, 36);
-            this.comboBoxSource.TabIndex = 2;
-            this.comboBoxSource.SelectedIndexChanged += new System.EventHandler(this.ComboBoxSourceSelectedIndexChanged);
+            this.comboBoxSource.TabIndex = 1;
             this.comboBoxSource.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxSourceFormat);
             this.comboBoxSource.SelectedValueChanged += new System.EventHandler(this.ComboBoxSourceSelectedValueChanged);
             // 
@@ -172,7 +174,6 @@
             this.comboBoxProfile.Location = new System.Drawing.Point(153, 49);
             this.comboBoxProfile.Name = "comboBoxProfile";
             this.comboBoxProfile.Size = new System.Drawing.Size(907, 36);
-            this.comboBoxProfile.Sorted = true;
             this.comboBoxProfile.TabIndex = 4;
             this.comboBoxProfile.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxProfileFormat);
             this.comboBoxProfile.SelectedValueChanged += new System.EventHandler(this.ComboBoxProfileSelectedValueChanged);
@@ -243,21 +244,21 @@
             // dateTimeProtocolButton
             // 
             this.dateTimeProtocolButton.Name = "dateTimeProtocolButton";
-            this.dateTimeProtocolButton.Size = new System.Drawing.Size(224, 26);
+            this.dateTimeProtocolButton.Size = new System.Drawing.Size(167, 26);
             this.dateTimeProtocolButton.Text = "Date/Tiime";
             this.dateTimeProtocolButton.Click += new System.EventHandler(this.OutputProtocolButtonClick);
             // 
             // contextProtocolButton
             // 
             this.contextProtocolButton.Name = "contextProtocolButton";
-            this.contextProtocolButton.Size = new System.Drawing.Size(224, 26);
+            this.contextProtocolButton.Size = new System.Drawing.Size(167, 26);
             this.contextProtocolButton.Text = "Context";
             this.contextProtocolButton.Click += new System.EventHandler(this.OutputProtocolButtonClick);
             // 
             // threadProtocolButton
             // 
             this.threadProtocolButton.Name = "threadProtocolButton";
-            this.threadProtocolButton.Size = new System.Drawing.Size(224, 26);
+            this.threadProtocolButton.Size = new System.Drawing.Size(167, 26);
             this.threadProtocolButton.Text = "Thread";
             this.threadProtocolButton.Click += new System.EventHandler(this.OutputProtocolButtonClick);
             // 
@@ -374,16 +375,24 @@
             // fileMenuItem
             // 
             this.fileMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.autoPlayMenuItem,
             this.quitMenuItem});
             this.fileMenuItem.Name = "fileMenuItem";
             this.fileMenuItem.Size = new System.Drawing.Size(46, 24);
             this.fileMenuItem.Text = "File";
             // 
+            // autoPlayMenuItem
+            // 
+            this.autoPlayMenuItem.Name = "autoPlayMenuItem";
+            this.autoPlayMenuItem.Size = new System.Drawing.Size(235, 26);
+            this.autoPlayMenuItem.Text = "AutoPlay Registration";
+            this.autoPlayMenuItem.Click += new System.EventHandler(this.AutoPlayMenuItemClick);
+            // 
             // quitMenuItem
             // 
             this.quitMenuItem.Name = "quitMenuItem";
             this.quitMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
-            this.quitMenuItem.Size = new System.Drawing.Size(173, 26);
+            this.quitMenuItem.Size = new System.Drawing.Size(235, 26);
             this.quitMenuItem.Text = "Quit";
             this.quitMenuItem.Click += new System.EventHandler(this.QuitMenuItemClick);
             // 
@@ -466,6 +475,7 @@
             this.menuStrip.PerformLayout();
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -511,5 +521,7 @@
         private ToolStripMenuItem dateTimeProtocolButton;
         private ToolStripMenuItem contextProtocolButton;
         private ToolStripMenuItem threadProtocolButton;
+        private ToolStripMenuItem autoPlayMenuItem;
+        private BindingSource bindingSource;
     }
 }

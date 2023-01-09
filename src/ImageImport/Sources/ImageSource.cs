@@ -10,7 +10,7 @@ namespace ImageImport.Sources
     internal abstract class ImageSource : INotifyPropertyChanged
     {
         [Browsable(false)]
-        public virtual string Description => $"{GetType().Name}.{GetHashCode()}";
+        public virtual string Description => "Dummy";
 
         [Description("Include subfolders"), DefaultValue(true)]
         public bool Recursive

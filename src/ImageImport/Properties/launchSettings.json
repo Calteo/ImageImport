@@ -2,7 +2,7 @@
   "profiles": {
     "ImageImport": {
       "commandName": "Project",
-      "commandLineArgs": "D:\\Temp\\Bilder"
+      "commandLineArgs": ""
     }
   }
 }

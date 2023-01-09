@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using ImageImport.Icons;
+using ImageImport.Options;
 using ImageImport.Sources;
 using Toolbox;
 using Toolbox.Collection.Generics;
@@ -68,7 +69,7 @@ namespace ImageImport
                 = comboBoxSource.Height + comboBoxSource.Margin.Vertical;
 
             comboBoxSource.DataSource = Settings.Sources;
-            comboBoxSource.DisplayMember = nameof(ImageSource.Description);
+            comboBoxSource.DisplayMember = nameof(Source.Description);
 
             comboBoxProfile.DataSource = Settings.Profiles;
             comboBoxProfile.DisplayMember = nameof(Profile.Name);
@@ -76,6 +77,8 @@ namespace ImageImport
 
         private void MainFormShown(object sender, EventArgs e)
         {
+            autoPlayMenuItem.Checked = AutoPlay.IsRegistered();
+
             if (Options.Folder.NotEmpty())
             {
                 var source = Settings.Sources.OfType<DriveSource>().FirstOrDefault(s => s.Folder == Options.Folder);
@@ -152,10 +155,6 @@ namespace ImageImport
         private void ComboBoxSourceSelectedValueChanged(object sender, EventArgs e)
         {
             Source = (ImageSource)comboBoxSource.SelectedItem;
-        }
-
-        private void ComboBoxSourceSelectedIndexChanged(object sender, EventArgs e)
-        {
         }
 
         private void ComboBoxProfileSelectedValueChanged(object sender, EventArgs e)
@@ -432,12 +431,36 @@ namespace ImageImport
                 else
                     ProtocolListener.TraceOutputOptions &= ~flag;
             }
-
         }
 
         private void OutputProtocolButtonClick(object sender, EventArgs e)
         {
             ToogleProtocolOutputOption(sender);
+        }
+
+        private void AutoPlayMenuItemClick(object sender, EventArgs e)
+        {
+            try
+            {
+                Tracer.StartOperation("AutoPlay");
+
+                if (autoPlayMenuItem.Checked)
+                {                    
+                    AutoPlay.Unregister();
+                }
+                else
+                    AutoPlay.Register();                
+            }
+            catch (Exception exception)
+            {
+                Tracer.TraceException(exception);
+            }
+            finally
+            {
+                Tracer.StopOperation();
+
+                autoPlayMenuItem.Checked = AutoPlay.IsRegistered();
+            }
         }
     }
 }

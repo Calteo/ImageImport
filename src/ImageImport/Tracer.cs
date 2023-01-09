@@ -18,7 +18,14 @@ namespace ImageImport
 
         public static void TraceException(Exception exception, int id = 0)
         {
-            Instance.TraceEvent(TraceEventType.Critical, id, exception.Message);
+            Instance.TraceEvent(TraceEventType.Critical, id, exception.Message);        }
+        public static void TraceError(string message, int id = 0)
+        {
+            Instance.TraceEvent(TraceEventType.Error, id, message);
+        }
+        public static void TraceWarning(string message, int id = 0)
+        {
+            Instance.TraceEvent(TraceEventType.Warning, id, message);
         }
 
         public static void TraceStart(string message, int id = 0)

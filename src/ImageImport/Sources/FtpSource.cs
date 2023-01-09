@@ -46,7 +46,7 @@ namespace ImageImport.Sources
             FtpClient = null;
         }
 
-        public FtpClient? FtpClient { get; set; }
+        private FtpClient? FtpClient { get; set; }
 
         public override Icon GetIcon()
         {

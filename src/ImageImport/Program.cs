@@ -1,3 +1,4 @@
+using ImageImport.Options;
 using Toolbox.CommandLine;
 
 namespace ImageImport
@@ -12,14 +13,28 @@ namespace ImageImport
         {
             ApplicationConfiguration.Initialize();
 
-            var parser = Parser.Create<ImportOptions>();
+            var parser = new Parser(typeof(ImportOptions), typeof(RegisterOptions), typeof(UnregisterOptions));
             var rc = parser.Parse(args)
                 .OnError(ShowError)
                 .OnHelp(ShowHelp)
+                .On<RegisterOptions>(RegisterAutoplay)
+                .On<UnregisterOptions>(UnregisterAutoplay)
                 .On<ImportOptions>(RunApplication)
                 .Return;
             
             return rc;
+        }
+
+        private static int UnregisterAutoplay(UnregisterOptions arg)
+        {
+            AutoPlay.Unregister();
+            return 0;
+        }
+
+        private static int RegisterAutoplay(RegisterOptions arg)
+        {
+            AutoPlay.Register();
+            return 0;
         }
 
         private static int RunApplication(ImportOptions options)

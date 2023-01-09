@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>Icons\app.ico</ApplicationIcon>
+    <ApplicationIcon>Icons\download.ico</ApplicationIcon>
     <IsPublishable>False</IsPublishable>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <Title>Image Import</Title>
@@ -30,17 +30,18 @@
     <None Remove="Icons\folder_minus.ico" />
     <None Remove="Icons\folder_plus.ico" />
     <None Remove="Icons\info.ico" />
+    <None Remove="Icons\servers.ico" />
     <None Remove="Icons\setting.ico" />
     <None Remove="Icons\x_circle.ico" />
     <None Remove="Licences\licence.html" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Icons\download.ico" />
     <Content Include="Licences\licence.html" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Icons\app.ico" />
     <EmbeddedResource Include="Icons\award.ico" />
     <EmbeddedResource Include="Icons\download.ico" />
     <EmbeddedResource Include="Icons\file.ico" />
@@ -50,15 +51,16 @@
     <EmbeddedResource Include="Icons\folder_minus.ico" />
     <EmbeddedResource Include="Icons\folder_plus.ico" />
     <EmbeddedResource Include="Icons\info.ico" />
+    <EmbeddedResource Include="Icons\servers.ico" />
     <EmbeddedResource Include="Icons\setting.ico" />
     <EmbeddedResource Include="Icons\x_circle.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentFTP" Version="42.1.0" />
+    <PackageReference Include="FluentFTP" Version="43.0.1" />
     <PackageReference Include="MetadataExtractor" Version="2.7.2" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1418.22" />
-    <PackageReference Include="Toolbox.CommandLine" Version="1.0.31" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1462.37" />
+    <PackageReference Include="Toolbox.CommandLine" Version="1.1.5" />
     <PackageReference Include="Toolbox.Core" Version="0.2.6" />
     <PackageReference Include="Toolbox.Xml.Settings" Version="1.0.11" />
   </ItemGroup>
