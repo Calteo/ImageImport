@@ -7,7 +7,7 @@
     <authors>Calteo</authors>
     <projectUrl>https://github.com/Calteo/ImageImport</projectUrl>
     <projectSourceUrl>https://github.com/Calteo/ImageImport</projectSourceUrl>
-    <!--<iconUrl>http://cdn.rawgit.com/__REPLACE_YOUR_REPO__/master/icons/slooh-explorer.png</iconUrl>-->
+    <iconUrl>http://cdn.rawgit.com/Calteo/ImageImport/main/chocolateley/app.png</iconUrl>
     <copyright>2022 Calteo</copyright>
     <licenseUrl>https://github.com/Calteo/ImageImport/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
