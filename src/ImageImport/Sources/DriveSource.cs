@@ -47,25 +47,19 @@ namespace ImageImport.Sources
             }
         }
 
-        protected override void Copy(ImageFileBase file, string target)
+        protected override Stream? OpenTokenRead()
         {
-            File.Copy(file.FullName, target, true);
-        }
-
-        protected override Stream? OpenToken(string fileName)
-        {
-            var fullFileName = Path.Combine(Folder, fileName);
+            var fullFileName = Path.Combine(Folder, ImportToken.FileName);
             if (File.Exists(fullFileName))
                 return new FileStream(fullFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
 
             return null;
         }
 
-        protected override void SaveToken(Stream stream, string fileName)
+        protected override Stream? OpenTokenWrite()
         {
-            var fullFileName = Path.Combine(Folder, fileName);
-            using var fileStream = new FileStream(fullFileName, FileMode.Create, FileAccess.Write, FileShare.None);
-            stream.CopyTo(fileStream);
+            var fullFileName = Path.Combine(Folder, ImportToken.FileName);
+            return new FileStream(fullFileName, FileMode.Create, FileAccess.Write, FileShare.None);            
         }
 
         protected override void Connect()

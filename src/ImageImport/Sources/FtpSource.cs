@@ -68,7 +68,8 @@ namespace ImageImport.Sources
                 {
                     if (file.Type == FtpObjectType.File)
                     {
-                        yield return new FtpFile(this, folder + file.Name, file.Modified);
+                        var fullname = folder + (folder.EndsWith("/") ? "" : "/") + file.Name;
+                        yield return new FtpFile(this, fullname, file.Modified);
                     }
                     else if (Recursive && file.Type == FtpObjectType.Directory)
                         queue.Enqueue(folder + file.Name + "/");
@@ -76,21 +77,18 @@ namespace ImageImport.Sources
             }
         }
 
-        protected override void Copy(ImageFileBase file, string target)
+        protected override Stream? OpenTokenRead()
         {
-            throw new NotImplementedException();
+            if (FtpClient==null || !FtpClient.FileExists(Folder + ImportToken.FileName)) return null;
+
+            return FtpClient.OpenRead(ImportToken.FileName, FtpDataType.ASCII);            
         }
 
-        protected override Stream? OpenToken(string fileName)
+        protected override Stream? OpenTokenWrite()
         {
-            if (FtpClient==null || !FtpClient.FileExists(Folder + fileName)) return null;
+            if (FtpClient == null || !FtpClient.FileExists(Folder + ImportToken.FileName)) return null;
 
-            return FtpClient.OpenRead(fileName, FtpDataType.ASCII);            
-        }
-
-        protected override void SaveToken(Stream stream, string fileName)
-        {
-            throw new NotImplementedException();
+            return FtpClient.OpenWrite(ImportToken.FileName, FtpDataType.ASCII);
         }
 
         internal Stream? GetStream(string fullName)

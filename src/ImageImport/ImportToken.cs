@@ -15,15 +15,10 @@ namespace ImageImport
             return formatter.Deserialize(stream);
         }
 
-        internal Stream Serialize()
+        internal void Serialize(Stream stream)
         {
-            var stream = new MemoryStream();
-
             var formatter = new XmlFormatter<ImportToken>();
             formatter.Serialize(this, stream);
-
-            stream.Position = 0;
-            return stream;
         }
     }
 }

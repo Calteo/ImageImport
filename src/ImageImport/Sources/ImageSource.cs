@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
@@ -173,15 +174,13 @@ namespace ImageImport.Sources
 
             Connect();
 
-            var tokenName = ImportToken.FileName;
-
-            using var stream = OpenToken(tokenName);
-            if (stream == null) Tracer.TraceVerbose($"no token found {tokenName}");
+            using var stream = OpenTokenRead();
+            if (stream == null) Tracer.TraceVerbose($"no token found {ImportToken.FileName}");
             else
             {
                 try
                 {
-                    Tracer.TraceVerbose($"found token {tokenName}");
+                    Tracer.TraceVerbose($"found token {ImportToken.FileName}");
                     Token = ImportToken.Parse(stream);
                 }
                 catch (Exception exception)
@@ -210,8 +209,8 @@ namespace ImageImport.Sources
         [Description("Time of last import.")]
         public DateTime? LastImport => Token?.LastImport;
 
-        protected abstract Stream? OpenToken(string fileName);
-        protected abstract void SaveToken(Stream stream, string fileName);
+        protected abstract Stream? OpenTokenRead();
+        protected abstract Stream? OpenTokenWrite();
 
         public abstract IEnumerable<ImageFileBase> EnumerateFiles();
 
@@ -272,21 +271,29 @@ namespace ImageImport.Sources
 
         public virtual void CompleteImport()
         {
-            var tokenName = ImportToken.FileName;
-
             try
             {
-                Tracer.TraceInformation($"create token {tokenName}");
+                Tracer.TraceInformation($"create token {ImportToken.FileName}");
 
                 var token = new ImportToken { LastImport = LastScan };
-                using var stream = token.Serialize();
-                SaveToken(stream, tokenName);
 
-                Token = token;
+                using var stream = OpenTokenWrite();
+                if (stream != null)
+                {
+                    try
+                    {
+                        token.Serialize(stream);
+                    }
+                    catch (Exception tokenException)
+                    {
+                        Tracer.TraceException(tokenException, 8597);
+                    }
+                    Token = token;
+                }
             }
-            catch (Exception excption)
+            catch (Exception execption)
             {
-                Tracer.TraceException(excption, 8596);
+                Tracer.TraceException(execption, 8596);
             }
             finally
             {
@@ -338,8 +345,6 @@ namespace ImageImport.Sources
                 Tracer.StopOperation();
             }
         }
-
-        abstract protected void Copy(ImageFileBase file, string target);
     }
 
     public enum SourceState
