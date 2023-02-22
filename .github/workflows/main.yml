@@ -84,7 +84,7 @@ jobs:
         ls chocolateley\tools
         $hash = Get-FileHash ${{ env.BINARY_PACKAGE }}
         $hash.Path = "package.zip"
-        $hash | Format-List -Property Path,Hash,Algorithm >> chocolateley\tools\VERFICATION.txt
+        $hash | Format-List -Property Path,Hash,Algorithm >> chocolateley\tools\VERIFICATION.txt
 
     - name: Create chocolately package
       uses: crazy-max/ghaction-chocolatey@v2
