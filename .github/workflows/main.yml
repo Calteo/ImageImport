@@ -14,7 +14,7 @@ on:
 env:
   BUILD_VERSION: "1.0.${{ github.run_number }}"
   CHOCOLATELY_NUSPEC: "chocolateley\\image-import.nuspec"  
-  BINARY_PACKAGE: "Image-Import-1.0.${{ github.run_number }}-binary.zip"
+  BINARY_PACKAGE: "Image-Import-Binary.1.0.${{ github.run_number }}.zip"
   CHOCOLATELY_PACKAGE: "Image-Import.1.0.${{ github.run_number }}.nupkg"
 
 jobs:
@@ -81,8 +81,10 @@ jobs:
         $xml.DocumentElement.metadata.version = "${{ env.BUILD_VERSION }}"
         $xml.Save("${{ env.CHOCOLATELY_NUSPEC }}")
         copy ${{ env.BINARY_PACKAGE }} chocolateley\tools\package.zip
+        ls chocolateley\tools
         $hash = Get-FileHash ${{ env.BINARY_PACKAGE }}
-        echo $hash
+        $hash.Path = "package.zip"
+        $hash | Format-List -Property Path,Hash,Algorithm >> chocolateley\tools\VERFICATION.txt
 
     - name: Create chocolately package
       uses: crazy-max/ghaction-chocolatey@v2
