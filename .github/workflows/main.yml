@@ -14,15 +14,14 @@ on:
 env:
   BUILD_VERSION: "1.0.${{ github.run_number }}"
   CHOCOLATELY_NUSPEC: "chocolateley\\image-import.nuspec"  
+  BINARY_PACKAGE: "Image-Import-1.0.${{ github.run_number }}-binary.zip"
+  CHOCOLATELY_PACKAGE: "Image-Import.1.0.${{ github.run_number }}.nupkg"
 
 jobs:
     
   build:
     name: Build
-    runs-on: windows-latest  
-    env:
-      BINARY_PACKAGE: "Image-Import-${{ env.BUILD_VERSION }}-binary.zip"
-      CHOCOLATELY_PACKAGE: "Image-Import.${{ env.BUILD_VERSION }}.nupkg"
+    runs-on: windows-latest    
 
     steps:
     # - name: List env
