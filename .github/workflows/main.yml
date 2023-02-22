@@ -13,7 +13,9 @@ on:
 
 env:
   BUILD_VERSION: "1.0.${{ github.run_number }}"
-  CHOCOLATELY_PACKAGE: "chocolateley\\image-import.nuspec"  
+  CHOCOLATELY_NUSPEC: "chocolateley\\image-import.nuspec"  
+  BINARY_PACKAGE: "Image-Import-${{ env.BUILD_VERSION }}-binary.zip"
+  CHOCOLATELY_PACKAGE: Image-Import.${{ env.BUILD_VERSION }}.nupkg
 
 jobs:
 
@@ -69,57 +71,41 @@ jobs:
     - name: Zip Binaries
       uses: TheDoctor0/zip-release@0.6.2
       with:
-        filename: 'binary.zip'        
-        path: output
+        directory: output
+        filename: '..\${{ env.BINARY_PACKAGE }}'
         type: 'zip'
 
     - name: Patch chocolately package
       run: |         
-        $xml = [xml](Get-Content ${{ env.CHOCOLATELY_PACKAGE }})
+        $xml = [xml](Get-Content ${{ env.CHOCOLATELY_NUSPEC }})
         $xml.DocumentElement.metadata.version = "${{ env.BUILD_VERSION }}"
-        $xml.Save("${{ env.CHOCOLATELY_PACKAGE }}")
-        copy binary.zip chocolateley\tools
-        Get-FileHash binary.zip
+        $xml.Save("${{ env.CHOCOLATELY_NUSPEC }}")
+        copy ${{ env.BINARY_PACKAGE }} chocolateley\tools\package.zip
+        $hash = Get-FileHash ${{ env.BINARY_PACKAGE }}
+        echo $hash
 
     - name: Create chocolately package
       uses: crazy-max/ghaction-chocolatey@v2
       with:
-         args: pack ${{ env.CHOCOLATELY_PACKAGE }}        
+         args: pack ${{ env.CHOCOLATELY_NUSPEC }}        
 
+    # create github release
     - name: Create Release
-      uses: actions/create-release@v1
-      id: create_release
+      uses: softprops/action-gh-release@v1        
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-          tag_name: ${{ env.BUILD_VERSION }}
-          release_name: Release ${{ env.BUILD_VERSION }}
-
-    - name: Upload binary asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./binary.zip
-        asset_name: Image-Import-Binary-${{ env.BUILD_VERSION }}.zip
-        asset_content_type: application/zip
-
-    - name: Upload chocolately asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: Image-Import.${{ env.BUILD_VERSION }}.nupkg
-        asset_name: Image-Import-Cocolately-${{ env.BUILD_VERSION }}.nupkg
-        asset_content_type: application/zip
+        name: Release ${{ env.BUILD_VERSION }}
+        tag_name: ${{ env.BUILD_VERSION }}
+        files: |
+          ${{ env.BINARY_PACKAGE }}
+          ${{ env.CHOCOLATELY_PACKAGE }}
 
     - name: Push package to chocolately     
       if: false
       uses: crazy-max/ghaction-chocolatey@v2
       with:
-        args: push Image-Import.${{ env.BUILD_VERSION }}.nupkg --source https://push.chocolatey.org/ --api-key ${{ secrets.CHOCOLATELY_TOKEN }}
+        args: push $${ env.CHOCOLATELY_PACKAGE }} --source https://push.chocolatey.org/ --api-key ${{ secrets.CHOCOLATELY_TOKEN }}
 
     # publish documentation
     - name: Publish documentation

@@ -1,5 +1,7 @@
 ﻿VERIFICATION
  
+The SHA256 hash of the pack
+
 The source of this package is located at https://github.com/Calteo/ImageImport.
 
 The included programms are available at https://github.com/Calteo/ImageImport/releases.
