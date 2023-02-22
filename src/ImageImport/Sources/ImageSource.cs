@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
@@ -8,23 +7,51 @@ using System.Text;
 
 namespace ImageImport.Sources
 {
+    [DefaultProperty(nameof(Name))]
     internal abstract class ImageSource : INotifyPropertyChanged
     {
-        [Browsable(false)]
-        public virtual string Description => "Dummy";
+        protected const string CategoryCommon = "Common";
+        protected const string CategoryOptions = "Options";
+        protected const string CategoryState = "State";
+        protected const string CategorySource = "Source";
 
-        [Description("Include subfolders"), DefaultValue(true)]
-        public bool Recursive
+        #region Name
+        private const string DefaultName = "Name";
+        private string _name = DefaultName;
+        [Description("Name of source"), DefaultValue(DefaultName)]
+        [Category(CategoryCommon)]
+        public string Name 
         {
-            get => recursive;
+            get => _name;
             set
             {
-                if (recursive == value) return;
-                recursive = value;
-
-                ResetScan();
+                if (SetField(ref _name, value))
+                {
+                    OnPropertyChanged(nameof(Description));
+                }
             }
         }
+        #endregion
+
+        [Browsable(false)]
+        public virtual string Description => Name;
+
+        #region Recursive
+        private bool _recursive = true;
+        [Description("Include subfolders"), DefaultValue(true)]
+        [Category(CategoryOptions)]
+        public bool Recursive
+        {
+            get => _recursive;
+            set
+            {
+                if (SetField(ref _recursive, value))
+                {
+                    ResetScan();
+                }
+            }
+        }
+        #endregion
 
         protected void ResetScan()
         {
@@ -34,9 +61,17 @@ namespace ImageImport.Sources
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected void OnPropertyChanged([CallerMemberName] string property = "")
+        protected void OnPropertyChanged(string property)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+        }
+
+        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName ?? throw new ArgumentException("Property name not set.", nameof(propertyName)));
+            return true;
         }
 
         public abstract Icon GetIcon();
@@ -44,15 +79,11 @@ namespace ImageImport.Sources
         #region LastScan
         private DateTime dateTime = DateTime.MinValue;
         [Browsable(false)]
+        [Category(CategoryState)]
         public DateTime LastScan
         {
             get => dateTime;
-            set
-            {
-                if (dateTime == value) return;
-                dateTime = value;
-                OnPropertyChanged();
-            }
+            set => SetField(ref dateTime, value);
         }
         #endregion
 
@@ -64,15 +95,11 @@ namespace ImageImport.Sources
         private const SourceState StateDefault = SourceState.Unknown;
         private SourceState sourceState = StateDefault;
         [DefaultValue(StateDefault)]
+        [Category(CategoryState)]
         public SourceState State
         {
             get => sourceState;
-            private set
-            {
-                if (sourceState == value) return;
-                sourceState = value;
-                OnPropertyChanged();
-            }
+            private set => SetField(ref sourceState, value);
         }
         #endregion
 
@@ -106,7 +133,7 @@ namespace ImageImport.Sources
 
             try
             {
-                InitScan();
+                if (!InitScan()) return;
 
                 var tokenName = ImportToken.FileName;
 
@@ -164,15 +191,15 @@ namespace ImageImport.Sources
             }
         }
 
-        abstract protected void Connect();
+        abstract protected bool Connect();
         abstract protected void Disconnect();
         
-        public void InitScan()
+        public bool InitScan()
         {
             Tracer.StartOperation("scan");
             Tracer.TraceStart(Description);
 
-            Connect();
+            if (!Connect()) return false;
 
             using var stream = OpenTokenRead();
             if (stream == null) Tracer.TraceVerbose($"no token found {ImportToken.FileName}");
@@ -190,6 +217,7 @@ namespace ImageImport.Sources
             }
 
             LastScan = DateTime.Now;
+            return true;
         }
 
         public virtual void CompleteScan()
@@ -207,6 +235,7 @@ namespace ImageImport.Sources
         public ImportToken? Token { get; set; }
 
         [Description("Time of last import.")]
+        [Category(CategoryState)]
         public DateTime? LastImport => Token?.LastImport;
 
         protected abstract Stream? OpenTokenRead();
@@ -221,12 +250,7 @@ namespace ImageImport.Sources
         public int Imported
         {
             get => imported;
-            set
-            {
-                if (imported == value) return;
-                imported = value;
-                OnPropertyChanged();
-            }
+            set => SetField(ref imported, value);
         }
         #endregion
         #region Skipped
@@ -236,29 +260,18 @@ namespace ImageImport.Sources
         public int Skipped
         {
             get => skipped;
-            set
-            {
-                if (skipped == value) return;
-                skipped = value;
-                OnPropertyChanged();
-            }
+            set => SetField(ref skipped, value);
         }
         #endregion
         #region Failed
         private const int FailedDefault = 0;
-        private int failed = FailedDefault;
-        private bool recursive = true;
+        private int failed = FailedDefault;        
 
         [Browsable(false), DefaultValue(FailedDefault)]
         public int Failed
         {
             get => failed;
-            set
-            {
-                if (failed == value) return;
-                failed = value;
-                OnPropertyChanged();
-            }
+            set => SetField(ref failed, value);
         }
         #endregion
 

@@ -52,6 +52,8 @@ namespace ImageImport
             }
         }
         #endregion
+        #region Token
+        #endregion
 
         #region Pattern
         private const string PatternDefault = default;

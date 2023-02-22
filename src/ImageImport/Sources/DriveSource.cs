@@ -10,7 +10,7 @@ namespace ImageImport.Sources
     [DefaultProperty(nameof(Folder))]
     internal class DriveSource : ImageSource
     {        
-        public override string Description => Folder.NotEmpty() ? Folder : "<unknown folder>";
+        public override string Description => $"{base.Description} - {(Folder.NotEmpty() ? Folder : "<unknown folder>")}";
 
         #region Folder
         private string folder = "";
@@ -18,16 +18,17 @@ namespace ImageImport.Sources
         [Editor(typeof(FolderEditor), typeof(UITypeEditor))]
         // [Editor(typeof(FolderNameEditor), typeof(UITypeEditor))]
         [Description("Folder to scan for images"), DefaultValue("")]
+        [Category(CategorySource)]
         public string Folder 
         { 
             get => folder;
             set
             {
-                if (folder == value) return;
-                folder = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(Description));
-                ResetScan();
+                if (SetField(ref folder, value))
+                {
+                    OnPropertyChanged(nameof(Description));
+                    ResetScan();
+                }
             }
         }
         #endregion
@@ -62,8 +63,12 @@ namespace ImageImport.Sources
             return new FileStream(fullFileName, FileMode.Create, FileAccess.Write, FileShare.None);            
         }
 
-        protected override void Connect()
+        protected override bool Connect()
         {
+            if (Directory.Exists(Folder)) return true;
+
+            Tracer.TraceError($"Folder '{Folder}' does not exist.");
+            return false;
         }
 
         protected override void Disconnect()

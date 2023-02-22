@@ -10,32 +10,44 @@ namespace ImageImport.Sources
     {
         private const string DefaultServer = "";
         [Description("Name of server"), DefaultValue(DefaultServer)]
+        [Category(CategorySource)]
         public string Server { get; set; } = DefaultServer;
 
         private const int DefaultPort = 25;
         [Description("Port of server"), DefaultValue(DefaultPort)]
+        [Category(CategorySource)]
         public int Port { get; set; } = DefaultPort;
 
         private const string DefaultFolder = "";
         [Description("Base folderr of files"), DefaultValue(DefaultFolder)]
+        [Category(CategorySource)]
         public string Folder { get; set; } = DefaultFolder;
 
         private const string DefaultUser = "";
         [Description("Username for logon"), DefaultValue(DefaultUser)]
+        [Category(CategorySource)]
         public string User { get; set; } = DefaultUser;
 
         private const string DefaultPassword = "";
         [Description("Password for logon"), DefaultValue(DefaultPassword), PasswordPropertyText(true)]
+        [Category(CategorySource)]
         public string Password { get; set; } = DefaultPassword;
 
-        public override string Description => Server.NotEmpty() ? $"{Server}:{Port}" : "<unknown server>";
+        public override string Description => $"{base.Description} - {(Server.NotEmpty() ? $"{Server}:{Port}" : "<unknown server>")}";
 
-        protected override void Connect()
+        protected override bool Connect()
         {
             FtpClient = new FtpClient(Server, User, Password, Port);
             var profile = FtpClient.AutoConnect();
+            
+            if (profile == null)
+            {
+                Tracer.TraceError($"not connected {Server}:{Port} with user '{User}'.");
+                return false;
+            }
 
             Tracer.TraceVerbose($"connected {Server}:{Port} with user '{User}' profile={profile.DataConnection}/{profile.Protocols}");
+            return FtpClient.IsConnected;
         }
 
         protected override void Disconnect()

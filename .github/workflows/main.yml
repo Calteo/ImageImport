@@ -29,6 +29,12 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
+    
+    - name: Install DocFX
+      uses: crazy-max/ghaction-chocolatey@v1
+      with:
+        args: install docfx
+
 
     # Install the .NET Core workload
     - name: Install .NET
@@ -50,10 +56,33 @@ jobs:
     # Compile the solution
     - name: Compile solution
       run: dotnet build src\ImageImport.sln -c Release -o output
+   
+    # Documentation
+    - name: Build Documentation
+      working-directory: docfx_project
+      run: docfx docfx.json
+      continue-on-error: false
+
+    # publish documentation
+    - name: Publish documentation
+      if: github.event_name == 'push'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docfx_project/docs
+        force_orphan: true
 
     - name: Remove unnecessary files
       run: del output\*.pdb,output\*.dev.json,output\*.deps.json 
-    
+
+    - name: Zip binaries
+      uses: TheDoctor0/zip-release@0.6.2
+      with:
+        filename: 'binary.zip'
+        directory: output
+        path: ImageImport.exe
+        type: 'zip'
+
     - name: Upload output
       uses: actions/upload-artifact@v3
       with:
@@ -164,6 +193,7 @@ jobs:
     name: Push Chocolately
     needs: pack_chocolately
     runs-on: windows-latest
+    if: false
 
     steps:
     - name: Download artifacts

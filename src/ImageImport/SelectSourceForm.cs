@@ -75,6 +75,17 @@ namespace ImageImport
                             item.Text = source.Description;
                             listView.Sort();
                         }
+                        else if (e.PropertyDescriptor?.Name == nameof(ImageSource.Name))
+                        {
+                            var source = Sources[e.NewIndex];
+                            var count = 1;
+                            var name = source.Name;
+
+                            while (Sources.Any(s => s!=source && s.Name==source.Name))
+                            {
+                                source.Name = $"{name}{count++}";                                
+                            }
+                        }
                         break;
                     }
             }
@@ -97,6 +108,9 @@ namespace ImageImport
                 ImageKey = imageKey,
                 Tag = source
             };
+
+            // source.PropertyChanged += (s, e) => item.Text = source.Description;
+
             return item;
         }
 
@@ -112,15 +126,6 @@ namespace ImageImport
                     }
                 }
             }
-        }
-
-        private void ListBoxSelectedValueChanged(object sender, EventArgs e)
-        {
-            /*
-            var selected = listBox.SelectedItems.Cast<object>().ToArray();
-            propertyGrid.SelectedObjects = selected;
-            deleteButton.Enabled = propertyGrid.Enabled = selected.Length != 0;
-            */
         }
 
         private void ListBoxFormat(object sender, ListControlConvertEventArgs e)
