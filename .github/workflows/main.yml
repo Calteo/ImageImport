@@ -63,103 +63,29 @@ jobs:
       run: docfx docfx.json
       continue-on-error: false
 
-    # publish documentation
-    - name: Publish documentation
-      if: github.event_name == 'push'
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: docfx_project/docs
-        force_orphan: true
-
     - name: Remove unnecessary files
       run: del output\*.pdb,output\*.dev.json,output\*.deps.json 
 
-    - name: Zip binaries
+    - name: Zip Binaries
       uses: TheDoctor0/zip-release@0.6.2
       with:
-        filename: 'binary.zip'
-        directory: output
-        path: ImageImport.exe
-        type: 'zip'
-
-    - name: Upload output
-      uses: actions/upload-artifact@v3
-      with:
-        name: output
-        path: output
-      
-  pack_release:
-    name: Pack Release
-    needs: build
-    runs-on: windows-latest
-
-    steps:
-    - name: Download output
-      uses: actions/download-artifact@v3
-      with:
-        name: output
-        path: output
-    
-    - name: Pack binaries
-      uses: TheDoctor0/zip-release@0.6.2
-      with:
-        filename: 'binary.zip'
+        filename: 'binary.zip'        
         path: output
         type: 'zip'
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: artifact
-        path: binary.zip
-  
-  pack_chocolately:
-    name: Pack Chocolateley
-    needs: build
-    runs-on: windows-latest
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-
-    - name: Download output
-      uses: actions/download-artifact@v3
-      with:
-        name: output
-        path: output
 
     - name: Patch chocolately package
       run: |         
         $xml = [xml](Get-Content ${{ env.CHOCOLATELY_PACKAGE }})
         $xml.DocumentElement.metadata.version = "${{ env.BUILD_VERSION }}"
         $xml.Save("${{ env.CHOCOLATELY_PACKAGE }}")
-        copy output\* chocolateley\tools -Recurse        
+        copy binary.zip chocolateley\tools
+        Get-FileHash binary.zip
 
     - name: Create chocolately package
       uses: crazy-max/ghaction-chocolatey@v2
       with:
          args: pack ${{ env.CHOCOLATELY_PACKAGE }}        
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: artifact
-        path: image-import.${{ env.BUILD_VERSION }}.nupkg
-
-  push_release:
-    name: Push Release
-    needs: [pack_release, pack_chocolately]
-    runs-on: windows-latest
-
-    steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: artifact
-        
     - name: Create Release
       uses: actions/create-release@v1
       id: create_release
@@ -189,18 +115,17 @@ jobs:
         asset_name: Image-Import-Cocolately-${{ env.BUILD_VERSION }}.nupkg
         asset_content_type: application/zip
 
-  push_chocolately:
-    name: Push Chocolately
-    needs: pack_chocolately
-    runs-on: windows-latest
-    if: false
-
-    steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: artifact
-    - name: Push package to chocolately      
+    - name: Push package to chocolately     
+      if: false
       uses: crazy-max/ghaction-chocolatey@v2
       with:
         args: push Image-Import.${{ env.BUILD_VERSION }}.nupkg --source https://push.chocolatey.org/ --api-key ${{ secrets.CHOCOLATELY_TOKEN }}
+
+    # publish documentation
+    - name: Publish documentation
+      if: github.event_name == 'push'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docfx_project/docs
+        force_orphan: true

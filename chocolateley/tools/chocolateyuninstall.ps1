@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = 'Stop'; 
+﻿$ErrorActionPreference = 'Stop'; # stop on all errors
 
 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
 $target = Join-Path $toolsDir "ImageImport.exe"
