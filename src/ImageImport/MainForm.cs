@@ -50,8 +50,6 @@ namespace ImageImport
 
             activityProtocolButton.PerformClick();
             warningProtocolButton.PerformClick();
-            // errorProtocolButton.PerformClick();
-            // verboseProtocolButton.PerformClick();
 
             dateTimeProtocolButton.PerformClick();
             contextProtocolButton.PerformClick();
@@ -235,7 +233,7 @@ namespace ImageImport
                         Files.Clear();
 
                         Files.AddRange(Source.Files
-                            .Where(f => !checkBoxOnlyNewFiles.Enabled || !checkBoxOnlyNewFiles.Checked || f.Created > ( Source.LastImport ?? DateTime.MinValue) )
+                            .Where(f => !checkBoxOnlyNewFiles.Enabled || !checkBoxOnlyNewFiles.Checked || f.Created > (Source.LastImport ?? DateTime.MinValue))
                             .Where(f => Profile.CanImport(f)));
 
                         labelFiles.Text += $" -> {Files.Count:#,##0} to import";
@@ -309,7 +307,12 @@ namespace ImageImport
             statusLabel.Text = "Importing";
 
             textBoxProtocol.Text = "";
-            ImportThread.Start(new Tuple<ImageSource, Profile>(Source, Profile));
+            ImportThread.Start(new Tuple<ImageSource, Profile, ImportParameters>(Source, Profile, new ImportParameters
+            {
+                OnlyNewFiles = checkBoxOnlyNewFiles.Checked,
+                Overwrite = checkBoxOverwrite.Checked,
+                DeleteAfterImport = checkBoxDeleteAfterImport.CheckState
+            }));
         }
 
         private bool CancelImport { get; set; }
@@ -318,9 +321,10 @@ namespace ImageImport
         private void Import(object? obj)
         {
             if (obj == null) throw new NullReferenceException($"no source and profile given for input.");
-            var parameters = (Tuple<ImageSource, Profile>)obj;
-            var source = parameters.Item1;
-            var profile = parameters.Item2;
+            var input = (Tuple<ImageSource, Profile, ImportParameters>)obj;
+            var source = input.Item1;
+            var profile = input.Item2;
+            var parameters = input.Item3;
 
             try
             {
@@ -334,7 +338,7 @@ namespace ImageImport
                 {
                     if (CancelImport) break;
 
-                    source.Import(file, profile);
+                    source.Import(file, profile, parameters);
 
                     Invoke(() => statusProgressBar.Value++);
                 }
@@ -349,7 +353,6 @@ namespace ImageImport
 
                 ImportThread = null;
                 Invoke(ImportCompleted, source);
-                
 
                 Tracer.TraceStop("import");
                 Tracer.StopOperation();
@@ -381,20 +384,12 @@ namespace ImageImport
 
         private void CheckBoxOverwriteCheckedChanged(object sender, EventArgs e)
         {
-            if (checkBoxOnlyNewFiles.Enabled && Profile != null)
-            {
-                Profile.Overwrite = checkBoxOverwrite.Checked;
-                UpdateFiles();
-            }
+            UpdateFiles();
         }
 
         private void CheckBoxOnlyNewFilesCheckedChanged(object sender, EventArgs e)
         {
-            if (checkBoxOnlyNewFiles.Enabled && Profile != null)
-            {
-                Profile.OnlyNewFiles = checkBoxOnlyNewFiles.Checked;
-                UpdateFiles();
-            }
+            UpdateFiles();
         }
 
         private void ActivityProtocolButtonClick(object sender, EventArgs e)
@@ -445,11 +440,11 @@ namespace ImageImport
                 Tracer.StartOperation("AutoPlay");
 
                 if (autoPlayMenuItem.Checked)
-                {                    
+                {
                     AutoPlay.Unregister();
                 }
                 else
-                    AutoPlay.Register();                
+                    AutoPlay.Register();
             }
             catch (Exception exception)
             {
@@ -460,6 +455,22 @@ namespace ImageImport
                 Tracer.StopOperation();
 
                 autoPlayMenuItem.Checked = AutoPlay.IsRegistered();
+            }
+        }
+
+        private void CheckBoxDeleteAfterImportCheckStateChanged(object sender, EventArgs e)
+        {
+            switch (checkBoxDeleteAfterImport.CheckState)
+            {
+                case CheckState.Checked:
+                    checkBoxDeleteAfterImport.Text = $"Delete after import - all files";
+                    break;
+                case CheckState.Unchecked:
+                    checkBoxDeleteAfterImport.Text = $"Delete after import";
+                    break;
+                case CheckState.Indeterminate:
+                    checkBoxDeleteAfterImport.Text = $"Delete after import - depend on profile / types";
+                    break;
             }
         }
     }

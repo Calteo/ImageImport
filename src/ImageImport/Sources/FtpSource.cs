@@ -107,5 +107,10 @@ namespace ImageImport.Sources
         {
             return FtpClient?.OpenRead(fullName, FtpDataType.Binary);
         }
+
+        internal void Delete(string filename)
+        {
+            FtpClient?.DeleteFile(filename);
+        }
     }
 }

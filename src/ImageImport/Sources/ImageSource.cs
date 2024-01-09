@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
@@ -314,7 +315,7 @@ namespace ImageImport.Sources
             }
         }        
 
-        public void Import(ImageFileBase file, Profile profile)
+        public void Import(ImageFileBase file, Profile profile, ImportParameters parameters)
         {
             Tracer.StartOperation(file.Name);
             Tracer.TraceInformation($"from {file.FullName}");
@@ -346,6 +347,15 @@ namespace ImageImport.Sources
                     file.Copy(target);
                     Imported++;
                     Tracer.TraceInformation($"   --> {target}");
+
+                    var remove = Combine(parameters.DeleteAfterImport, profile.DeleteAfterImport);
+                    remove = Combine(remove, fileType.DeleteAfterImport);
+
+                    if (remove == CheckState.Checked)
+                    {
+                        Tracer.TraceInformation($"   delete {file.FullName}");
+                        file.Delete();
+                    }    
                 }
             }
             catch (Exception exception)
@@ -358,6 +368,12 @@ namespace ImageImport.Sources
                 Tracer.StopOperation();
             }
         }
+        private static CheckState Combine(CheckState state, CheckState child)
+        {
+            if (state == CheckState.Indeterminate) return child;
+            return state;
+        }
+
     }
 
     public enum SourceState

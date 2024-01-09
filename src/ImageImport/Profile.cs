@@ -54,6 +54,21 @@ namespace ImageImport
             }
         }
         #endregion
+        #region DeleteAfterImport
+        private const CheckState DeleteAfterImportDefault = CheckState.Indeterminate;
+        private CheckState deleteAfterImport = DeleteAfterImportDefault;
+        [DefaultValue(DeleteAfterImportDefault)]
+        public CheckState DeleteAfterImport
+        {
+            get => deleteAfterImport;
+            set
+            {
+                if (Equals(deleteAfterImport, value)) return;
+                deleteAfterImport = value;
+                OnPropertyChanged();
+            }
+        }
+        #endregion
 
         public BindingList<ProfileFileType> FileTypes { get; set; } = new BindingList<ProfileFileType>();
 

@@ -38,5 +38,6 @@ namespace ImageImport.Sources
 
         public abstract Stream GetStream();
         public abstract void Copy(string target);
+        public abstract void Delete();
     }
 }

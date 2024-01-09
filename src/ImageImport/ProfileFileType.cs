@@ -52,9 +52,21 @@ namespace ImageImport
             }
         }
         #endregion
-        #region Token
+        #region DeleteAfterImport
+        private const CheckState DeleteAfterImportDefault = CheckState.Indeterminate;
+        private CheckState deleteAfterImport = DeleteAfterImportDefault;
+        [DefaultValue(DeleteAfterImportDefault)]
+        public CheckState DeleteAfterImport
+        {
+            get => deleteAfterImport;
+            set
+            {
+                if (Equals(deleteAfterImport, value)) return;
+                deleteAfterImport = value;
+                OnPropertyChanged();
+            }
+        }
         #endregion
-
         #region Pattern
         private const string PatternDefault = default;
         private string pattern = PatternDefault;

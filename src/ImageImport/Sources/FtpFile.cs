@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Security.Cryptography.Pkcs;
 
 namespace ImageImport.Sources
 {
@@ -26,9 +25,8 @@ namespace ImageImport.Sources
         {
             if (Buffer == null)
             {
-                var stream = Source.GetStream(FullName);
-                if (stream == null)
-                    throw new FileNotFoundException(FullName);
+                var stream = Source.GetStream(FullName)
+                    ?? throw new FileNotFoundException(FullName);
 
                 Buffer = new byte[stream.Length];
                 var offset = 0;
@@ -41,6 +39,11 @@ namespace ImageImport.Sources
             }
 
             return new MemoryStream(Buffer);
+        }
+
+        public override void Delete()
+        {
+            Source.Delete(FullName);
         }
     }
 }

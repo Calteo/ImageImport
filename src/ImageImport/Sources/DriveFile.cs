@@ -17,5 +17,10 @@ namespace ImageImport.Sources
         {
             return new FileStream(FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
+
+        public override void Delete()
+        {
+            File.Delete(FullName);
+        }
     }
 }

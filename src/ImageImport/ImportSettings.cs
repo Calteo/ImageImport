@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.Serialization;
 using ImageImport.Sources;
 using Toolbox.Xml.Settings;
